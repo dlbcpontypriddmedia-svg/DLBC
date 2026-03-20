@@ -11,7 +11,9 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json();
     force = body?.force === true;
-  } catch {}
+  } catch {
+    force = false;
+  }
 
   // Get current settings
   const { data: settings } = await sb.from('stream_settings')

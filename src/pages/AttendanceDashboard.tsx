@@ -1,12 +1,17 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Input } from '@/components/ui/input';
-import Logo from '@/components/Logo';
-import PDFExportButton from '@/components/PDFExportButton';
+import { LogOut, RefreshCcw } from 'lucide-react';
+import { toast } from 'sonner';
+
 import ActiveViewersCount from '@/components/ActiveViewersCount';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import Logo from '@/components/Logo';
+import PageLoader from '@/components/PageLoader';
+import PDFExportButton from '@/components/PDFExportButton';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { api } from '@/lib/api';
 
 interface AttendanceRecord {
@@ -15,146 +20,185 @@ interface AttendanceRecord {
   email: string;
   branch: string;
   stream_title: string;
-  start_time: string;
-  last_seen_at: string;
   duration_seconds: number;
   timestamp: string;
   attendance_type: string;
   age_category: string | null;
-  family_surname: string | null;
   family_adult_count: number | null;
   family_young_adult_count: number | null;
   family_youth_count: number | null;
   family_children_count: number | null;
 }
 
+const getErrorMessage = (error: unknown, fallback: string) =>
+  error instanceof Error ? error.message : fallback;
+
 const AttendanceDashboard = () => {
   const navigate = useNavigate();
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [titles, setTitles] = useState<string[]>([]);
-  const [settings, setSettings] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const [filterTitle, setFilterTitle] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
 
-  const branchInfo = (() => {
-    try { return JSON.parse(localStorage.getItem('dlbc_staff_branch') || '{}'); } catch { return {}; }
-  })();
+  const branchInfo = useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem('dlbc_staff_branch') || '{}');
+    } catch {
+      return {};
+    }
+  }, []);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (showRefresh = false) => {
+    if (showRefresh) setRefreshing(true);
+
     try {
       const params: Record<string, string> = {};
       if (filterTitle) params.stream_title = filterTitle;
       if (dateFrom) params.date_from = dateFrom;
       if (dateTo) params.date_to = dateTo;
+
       const res = await api.getAttendanceData(params);
       setRecords(res.records || []);
       setTitles(res.titles || []);
-      setSettings(res.settings);
-    } catch (err: any) {
-      if (err.message?.includes('Unauthorized')) {
+    } catch (err: unknown) {
+      if (err instanceof Error && err.message.includes('Unauthorized')) {
         navigate('/attendance/login');
+        return;
       }
+
+      toast.error(getErrorMessage(err, 'Unable to load attendance records.'));
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
-  }, [filterTitle, dateFrom, dateTo, navigate]);
+  }, [dateFrom, dateTo, filterTitle, navigate]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => {
+    void fetchData();
+  }, [fetchData]);
 
   const handleLogout = async () => {
-    await api.logout();
-    localStorage.removeItem('dlbc_staff_branch');
-    navigate('/attendance/login');
+    setLoggingOut(true);
+    try {
+      await api.logout();
+      localStorage.removeItem('dlbc_staff_branch');
+      navigate('/attendance/login');
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, 'Unable to log out right now.'));
+      setLoggingOut(false);
+    }
   };
 
-  const formatDuration = (s: number) => {
-    const h = Math.floor(s / 3600);
-    const m = Math.floor((s % 3600) / 60);
+  const formatDuration = (seconds: number) => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
     return h > 0 ? `${h}h ${m}m` : `${m}m`;
   };
 
-  // Summary counts
   const summary = {
     total: records.length,
-    adults: records.filter(r => r.age_category === 'Adult' || r.attendance_type === 'Family').length,
-    youngAdults: records.filter(r => r.age_category === 'Young Adult').length,
-    youth: records.filter(r => r.age_category === 'Youth').length,
-    children: records.filter(r => r.age_category === 'Children').length,
-    families: records.filter(r => r.attendance_type === 'Family').length,
-    totalFamilyMembers: records.filter(r => r.attendance_type === 'Family').reduce((sum, r) =>
-      sum + (r.family_adult_count || 0) + (r.family_young_adult_count || 0) + (r.family_youth_count || 0) + (r.family_children_count || 0), 0),
+    families: records.filter((r) => r.attendance_type === 'Family').length,
+    youth: records.filter((r) => r.age_category === 'Youth').length,
+    familyMembers: records
+      .filter((r) => r.attendance_type === 'Family')
+      .reduce(
+        (sum, r) =>
+          sum +
+          (r.family_adult_count || 0) +
+          (r.family_young_adult_count || 0) +
+          (r.family_youth_count || 0) +
+          (r.family_children_count || 0),
+        0,
+      ),
   };
 
+  if (loading) return <PageLoader label="Loading attendance dashboard..." />;
+
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <header className="flex items-center justify-between border-b border-border px-4 py-3 md:px-6">
-        <div className="flex items-center gap-4">
-          <Logo />
-          <span className="text-sm font-medium text-muted-foreground">{branchInfo.name || 'Staff'}</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <ActiveViewersCount branchId={branchInfo.id} />
-          <Button variant="outline" size="sm" onClick={handleLogout}>Logout</Button>
-        </div>
-      </header>
+    <div className="page-shell min-h-screen px-4 py-4 md:px-6 md:py-6">
+      <div className="mx-auto flex min-h-[calc(100vh-2rem)] max-w-6xl flex-col gap-4">
+        <header className="surface-panel flex flex-col gap-4 px-5 py-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-wrap items-center gap-4">
+            <Logo />
+            <span className="rounded-full border border-primary/10 bg-primary/[0.03] px-3 py-1.5 text-sm font-medium text-foreground">
+              {branchInfo.name || 'Staff Dashboard'}
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <ActiveViewersCount branchId={branchInfo.id} />
+            <Button variant="outline" size="sm" onClick={handleLogout} disabled={loggingOut}>
+              {loggingOut ? <LoadingSpinner size="sm" className="text-current" /> : <LogOut className="h-4 w-4" />}
+              {loggingOut ? 'Logging out...' : 'Logout'}
+            </Button>
+          </div>
+        </header>
 
-      <main className="flex-1 px-4 py-6 md:px-8 md:py-8">
-        <div className="mx-auto max-w-6xl space-y-6">
-          <h1 className="text-xl font-bold text-foreground" style={{ lineHeight: '1.1' }}>Attendance Dashboard</h1>
+        <main className="space-y-4">
+          <section className="surface-panel p-6">
+            <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.28em] text-primary/75">Branch Attendance</p>
+                <h1 className="text-3xl font-semibold text-foreground">Attendance Dashboard</h1>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Review branch records, filter service sessions, and export reports for follow-up.
+                </p>
+              </div>
 
-          {/* Summary cards */}
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+              <div className="flex flex-wrap items-end gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Service</label>
+                  <select
+                    value={filterTitle}
+                    onChange={(e) => setFilterTitle(e.target.value)}
+                    className="flex h-10 rounded-xl border border-input bg-white/80 px-3 text-sm"
+                  >
+                    <option value="">All services</option>
+                    {titles.map((title) => <option key={title} value={title}>{title}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs uppercase tracking-[0.18em] text-muted-foreground">From</label>
+                  <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="h-10 w-36 bg-white/80" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs uppercase tracking-[0.18em] text-muted-foreground">To</label>
+                  <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="h-10 w-36 bg-white/80" />
+                </div>
+                <Button variant="outline" size="sm" onClick={() => void fetchData(true)} disabled={refreshing}>
+                  {refreshing ? <LoadingSpinner size="sm" className="text-current" /> : <RefreshCcw className="h-4 w-4" />}
+                  {refreshing ? 'Refreshing...' : 'Refresh'}
+                </Button>
+                <PDFExportButton records={records} branchName={branchInfo.name} serviceTitle={filterTitle || undefined} />
+              </div>
+            </div>
+          </section>
+
+          <section className="grid gap-3 md:grid-cols-4">
             {[
               { label: 'Total Records', value: summary.total },
               { label: 'Families', value: summary.families },
               { label: 'Youth', value: summary.youth },
-              { label: 'Family Members', value: summary.totalFamilyMembers },
+              { label: 'Family Members', value: summary.familyMembers },
             ].map(({ label, value }) => (
-              <Card key={label}>
-                <CardContent className="p-4">
-                  <p className="text-xs text-muted-foreground">{label}</p>
-                  <p className="text-2xl font-bold tabular-nums text-foreground">{value}</p>
+              <Card key={label} className="surface-panel border-none shadow-none">
+                <CardContent className="p-5">
+                  <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
+                  <p className="mt-2 text-3xl font-semibold tabular-nums text-foreground">{value}</p>
                 </CardContent>
               </Card>
             ))}
-          </div>
+          </section>
 
-          {/* Filters */}
-          <div className="flex flex-wrap items-end gap-3">
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Service</label>
-              <select
-                value={filterTitle}
-                onChange={e => setFilterTitle(e.target.value)}
-                className="flex h-9 rounded-md border border-input bg-background px-3 text-sm"
-              >
-                <option value="">All services</option>
-                {titles.map(t => <option key={t} value={t}>{t}</option>)}
-              </select>
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">From</label>
-              <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="h-9 w-36" />
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">To</label>
-              <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="h-9 w-36" />
-            </div>
-            <Button variant="outline" size="sm" onClick={fetchData}>Refresh</Button>
-            <PDFExportButton records={records} branchName={branchInfo.name} serviceTitle={filterTitle || undefined} />
-          </div>
-
-          {/* Table */}
-          <Card>
+          <Card className="surface-panel border-none shadow-none">
             <CardContent className="p-0">
-              {loading ? (
-                <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">Loading...</div>
-              ) : records.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-sm text-muted-foreground">
-                  <p>No attendance records found</p>
-                  <p className="text-xs mt-1">Records will appear here when members join the stream.</p>
+              {records.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 text-center text-sm text-muted-foreground">
+                  <p className="text-base font-semibold text-foreground">No attendance records found</p>
+                  <p className="mt-1">Records will appear here when members join the stream.</p>
                 </div>
               ) : (
                 <Table>
@@ -169,20 +213,24 @@ const AttendanceDashboard = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {records.map(r => (
-                      <TableRow key={r.id}>
-                        <TableCell className="font-medium">{r.name}</TableCell>
-                        <TableCell className="text-muted-foreground">{r.email}</TableCell>
+                    {records.map((record) => (
+                      <TableRow key={record.id}>
+                        <TableCell className="font-medium">{record.name}</TableCell>
+                        <TableCell className="text-muted-foreground">{record.email}</TableCell>
                         <TableCell>
-                          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                            r.attendance_type === 'Family' ? 'bg-accent/20 text-accent-foreground' : 'bg-muted text-muted-foreground'
+                          <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${
+                            record.attendance_type === 'Family'
+                              ? 'bg-amber-100 text-amber-700'
+                              : 'bg-slate-100 text-slate-600'
                           }`}>
-                            {r.attendance_type}
+                            {record.attendance_type}
                           </span>
                         </TableCell>
-                        <TableCell className="text-muted-foreground max-w-[200px] truncate">{r.stream_title}</TableCell>
-                        <TableCell className="tabular-nums">{formatDuration(r.duration_seconds)}</TableCell>
-                        <TableCell className="tabular-nums text-muted-foreground">{new Date(r.timestamp).toLocaleDateString()}</TableCell>
+                        <TableCell className="max-w-[220px] truncate text-muted-foreground">{record.stream_title}</TableCell>
+                        <TableCell className="tabular-nums">{formatDuration(record.duration_seconds)}</TableCell>
+                        <TableCell className="tabular-nums text-muted-foreground">
+                          {new Date(record.timestamp).toLocaleDateString()}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -190,8 +238,8 @@ const AttendanceDashboard = () => {
               )}
             </CardContent>
           </Card>
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 };

@@ -130,7 +130,9 @@
   }
 
   .surface-panel {
-    @apply relative overflow-hidden rounded-[1.5rem] border border-white/70 bg-white/88 backdrop-blur;
+    @apply relative overflow-hidden rounded-[1.5rem] border backdrop-blur;
+    border-color: rgba(255, 255, 255, 0.72);
+    background-color: rgba(255, 255, 255, 0.88);
   }
 
   .surface-panel::before {

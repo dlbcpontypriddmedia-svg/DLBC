@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
+import { ArrowRight, Church, ShieldCheck, Users } from 'lucide-react';
+
 import BranchSelector from '@/components/BranchSelector';
+import LoadingSpinner from '@/components/LoadingSpinner';
 import Logo from '@/components/Logo';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { saveViewerSession, ViewerSession } from '@/lib/session';
 
 const Index = () => {
@@ -25,10 +28,10 @@ const Index = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !email || !branchId) return;
+    if (!name || !email || !branchId || submitting) return;
+    setSubmitting(true);
 
     const sessionId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-
     const session: ViewerSession = {
       name: name.trim(),
       email: email.trim().toLowerCase(),
@@ -36,13 +39,15 @@ const Index = () => {
       branch_id: branchId,
       stream_session_id: sessionId,
       attendance_type: type,
-      ...(type === 'Single' ? { age_category: ageCategory } : {
-        family_surname: familySurname,
-        family_adult_count: adultCount,
-        family_young_adult_count: youngAdultCount,
-        family_youth_count: youthCount,
-        family_children_count: childrenCount,
-      }),
+      ...(type === 'Single'
+        ? { age_category: ageCategory }
+        : {
+            family_surname: familySurname,
+            family_adult_count: adultCount,
+            family_young_adult_count: youngAdultCount,
+            family_youth_count: youthCount,
+            family_children_count: childrenCount,
+          }),
     };
 
     saveViewerSession(session);
@@ -50,107 +55,185 @@ const Index = () => {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md space-y-8">
-        <div className="flex flex-col items-center gap-4 text-center">
-          <Logo />
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground" style={{ lineHeight: '1.1' }}>
-              Join Live Service
-            </h1>
-            <p className="mt-1.5 text-sm text-muted-foreground text-pretty">
-              Fill in your details to join the live stream and mark your attendance.
+    <div className="page-shell flex min-h-screen items-center justify-center px-4 py-10 md:px-6">
+      <div className="grid w-full max-w-6xl gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+        <section className="surface-panel flex flex-col justify-between p-8 md:p-10">
+          <div className="space-y-8">
+            <Logo className="justify-center md:justify-start" />
+
+            <div className="space-y-4 text-center md:text-left">
+              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-primary/75">
+                Worship Attendance Portal
+              </p>
+              <h1 className="max-w-xl text-4xl font-semibold leading-tight text-foreground md:text-5xl">
+                Join the live service with a calmer, verified attendance flow.
+              </h1>
+              <p className="max-w-xl text-lg text-muted-foreground">
+                Select your branch, identify your household, and proceed into the live stream with attendance captured automatically.
+              </p>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-3">
+              {[
+                {
+                  icon: Church,
+                  title: 'Church-wide access',
+                  text: 'Branch selection is served from the protected Supabase backend.',
+                },
+                {
+                  icon: Users,
+                  title: 'Family-ready records',
+                  text: 'Singles and households are captured with the right attendance fields.',
+                },
+                {
+                  icon: ShieldCheck,
+                  title: 'Secure workflow',
+                  text: 'Admin and staff functions remain separated from public stream access.',
+                },
+              ].map(({ icon: Icon, title, text }) => (
+                <Card key={title} className="border-primary/10 bg-white/72 shadow-none">
+                  <CardContent className="space-y-3 p-5">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <div className="space-y-1">
+                      <h2 className="font-display text-base font-semibold text-foreground">{title}</h2>
+                      <p className="text-sm text-muted-foreground">{text}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-8 rounded-2xl border border-primary/10 bg-primary/[0.03] px-5 py-4 text-sm text-muted-foreground">
+            Attendance runs in the background while you remain on the stream page. Keep the tab open during service for accurate duration capture.
+          </div>
+        </section>
+
+        <section className="surface-panel p-6 md:p-8">
+          <div className="mb-6 space-y-2 text-center">
+            <h2 className="text-3xl font-semibold text-foreground">Join Live Service</h2>
+            <p className="text-sm text-muted-foreground">
+              Enter your attendance details below to continue into the stream.
             </p>
           </div>
-        </div>
 
-        <Card className="shadow-md shadow-primary/5">
-          <CardContent className="pt-6">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Type toggle */}
-              <div className="flex rounded-lg border border-input p-1 gap-1">
-                {(['Single', 'Family'] as const).map(t => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => setType(t)}
-                    className={`flex-1 rounded-md py-2 text-sm font-medium transition-colors ${
-                      type === t
-                        ? 'bg-primary text-primary-foreground shadow-sm'
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    {t}
-                  </button>
-                ))}
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="grid gap-2 rounded-2xl border border-primary/10 bg-muted/40 p-1 sm:grid-cols-2">
+              {(['Single', 'Family'] as const).map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => setType(option)}
+                  className={`rounded-[1rem] px-4 py-3 text-sm font-semibold transition-all ${
+                    type === option
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'text-muted-foreground hover:bg-white hover:text-foreground'
+                  }`}
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="name">{type === 'Family' ? 'Contact Name' : 'Full Name'}</Label>
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                maxLength={200}
+                placeholder="Enter your name"
+                className="h-11 bg-white/80"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                maxLength={200}
+                placeholder="your@email.com"
+                className="h-11 bg-white/80"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Branch</Label>
+              <BranchSelector value={branchId} onChange={(id, nameValue) => { setBranchId(id); setBranchName(nameValue); }} />
+            </div>
+
+            {type === 'Single' && (
+              <div className="space-y-2">
+                <Label>Age Category</Label>
+                <select
+                  value={ageCategory}
+                  onChange={(e) => setAgeCategory(e.target.value)}
+                  className="flex h-11 w-full rounded-xl border border-input bg-white/80 px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <option value="">Select age category...</option>
+                  <option value="Adult">Adult</option>
+                  <option value="Young Adult">Young Adult</option>
+                  <option value="Youth">Youth</option>
+                  <option value="Children">Children</option>
+                </select>
               </div>
+            )}
 
-              <div className="space-y-1.5">
-                <Label htmlFor="name">{type === 'Family' ? 'Contact Name' : 'Full Name'}</Label>
-                <Input id="name" value={name} onChange={e => setName(e.target.value)} required maxLength={200} placeholder="Enter your name" />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required maxLength={200} placeholder="your@email.com" />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label>Branch</Label>
-                <BranchSelector value={branchId} onChange={(id, name) => { setBranchId(id); setBranchName(name); }} />
-              </div>
-
-              {type === 'Single' && (
-                <div className="space-y-1.5">
-                  <Label>Age Category</Label>
-                  <select
-                    value={ageCategory}
-                    onChange={e => setAgeCategory(e.target.value)}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  >
-                    <option value="">Select age category...</option>
-                    <option value="Adult">Adult</option>
-                    <option value="Young Adult">Young Adult</option>
-                    <option value="Youth">Youth</option>
-                    <option value="Children">Children</option>
-                  </select>
+            {type === 'Family' && (
+              <div className="space-y-4 rounded-2xl border border-primary/10 bg-muted/35 p-4">
+                <div className="space-y-2">
+                  <Label htmlFor="surname">Family Surname</Label>
+                  <Input
+                    id="surname"
+                    value={familySurname}
+                    onChange={(e) => setFamilySurname(e.target.value)}
+                    placeholder="Family surname"
+                    maxLength={100}
+                    className="h-11 bg-white/80"
+                  />
                 </div>
-              )}
-
-              {type === 'Family' && (
-                <div className="space-y-4 rounded-lg border border-input p-4">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="surname">Family Surname</Label>
-                    <Input id="surname" value={familySurname} onChange={e => setFamilySurname(e.target.value)} placeholder="Family surname" maxLength={100} />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    {[
-                      { label: 'Adults', val: adultCount, set: setAdultCount },
-                      { label: 'Young Adults', val: youngAdultCount, set: setYoungAdultCount },
-                      { label: 'Youth', val: youthCount, set: setYouthCount },
-                      { label: 'Children', val: childrenCount, set: setChildrenCount },
-                    ].map(({ label, val, set }) => (
-                      <div key={label} className="space-y-1">
-                        <Label className="text-xs">{label}</Label>
-                        <Input type="number" min={0} max={50} value={val} onChange={e => set(Number(e.target.value))} />
-                      </div>
-                    ))}
-                  </div>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { label: 'Adults', val: adultCount, set: setAdultCount },
+                    { label: 'Young Adults', val: youngAdultCount, set: setYoungAdultCount },
+                    { label: 'Youth', val: youthCount, set: setYouthCount },
+                    { label: 'Children', val: childrenCount, set: setChildrenCount },
+                  ].map(({ label, val, set }) => (
+                    <div key={label} className="space-y-2">
+                      <Label className="text-xs uppercase tracking-[0.16em] text-muted-foreground">{label}</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        max={50}
+                        value={val}
+                        onChange={(e) => set(Number(e.target.value))}
+                        className="h-11 bg-white/80"
+                      />
+                    </div>
+                  ))}
                 </div>
-              )}
+              </div>
+            )}
 
-              <Button type="submit" className="w-full" size="lg" disabled={!name || !email || !branchId || submitting}>
-                Join Stream
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+            <Button type="submit" className="h-12 w-full rounded-xl text-base" size="lg" disabled={!name || !email || !branchId || submitting}>
+              {submitting ? <LoadingSpinner size="sm" className="text-current" /> : <ArrowRight className="h-4 w-4" />}
+              {submitting ? 'Joining stream...' : 'Join Stream'}
+            </Button>
+          </form>
 
-        <p className="text-center text-xs text-muted-foreground">
-          <a href="/attendance/login" className="hover:text-foreground transition-colors">Staff Login</a>
-          {' · '}
-          <a href="/admin/login" className="hover:text-foreground transition-colors">Admin</a>
-        </p>
+          <p className="mt-6 text-center text-xs uppercase tracking-[0.24em] text-muted-foreground">
+            <a href="/attendance/login" className="transition-colors hover:text-foreground">Staff Login</a>
+            {' · '}
+            <a href="/admin/login" className="transition-colors hover:text-foreground">Admin Portal</a>
+          </p>
+        </section>
       </div>
     </div>
   );

@@ -7,26 +7,17 @@ interface LogoProps {
 
 const Logo = ({ className = "", compact = false }: LogoProps) => (
   <div className={cn("flex items-center gap-3", className)}>
-    <div className="brand-seal shrink-0" aria-hidden="true">
-      <div className="brand-seal__ring">
-        <div className="brand-seal__field">
-          <div className="brand-seal__cross brand-seal__cross--vertical" />
-          <div className="brand-seal__cross brand-seal__cross--horizontal" />
-          <div className="brand-seal__glow" />
-          <div className="brand-seal__book">
-            <span className="brand-seal__page brand-seal__page--left" />
-            <span className="brand-seal__page brand-seal__page--right" />
-          </div>
-        </div>
-      </div>
-    </div>
+    <img
+      src="/church-logo.jpg"
+      alt="Deeper Life Bible Church logo"
+      className="h-14 w-14 shrink-0 rounded-full border border-primary/10 object-cover shadow-[0_14px_24px_-18px_rgba(19,63,112,0.85)]"
+    />
 
     {!compact && (
-      <div className="min-w-0 leading-tight">
-        <p className="font-display text-lg font-semibold uppercase tracking-[0.28em] text-primary">
-          Deeper Life
+      <div className="min-w-0">
+        <p className="font-display text-lg font-semibold text-foreground sm:text-xl">
+          Deeper Life Bible Church
         </p>
-        <p className="text-sm font-semibold text-foreground">Bible Church</p>
         <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
           Attendance Streaming Portal
         </p>
