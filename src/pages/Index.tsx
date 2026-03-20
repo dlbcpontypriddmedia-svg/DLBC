@@ -136,7 +136,7 @@ const Index = () => {
                   <select
                     value={ageCategory}
                     onChange={(e) => setAgeCategory(e.target.value)}
-                    className="flex h-11 w-full rounded-xl border border-input bg-white/80 px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="flex h-11 w-full rounded-xl border border-input bg-white/80 px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring"
                   >
                     <option value="">Select age category...</option>
                     <option value="Adult">Adult</option>

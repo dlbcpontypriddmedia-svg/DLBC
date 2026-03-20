@@ -41,7 +41,7 @@ const BranchSelector = ({ value, onChange, className = '' }: Props) => {
           const b = branches.find(b => b.id === e.target.value);
           if (b) onChange(b.id, b.name);
         }}
-        className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${className}`}
+        className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring ${className}`}
         disabled={isDisabled}
         aria-busy={loading}
       >
