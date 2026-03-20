@@ -216,8 +216,8 @@ const Stream = () => {
               <h1 className="text-2xl font-semibold leading-snug text-foreground md:text-3xl">{streamTitle}</h1>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-              <div className="flex flex-wrap items-center gap-2">
+            <div className="flex justify-center">
+              <div className="flex flex-wrap items-center justify-center gap-2">
                 <Button variant="outline" size="sm" onClick={handleTogglePlay} disabled={!videoId}>
                   {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                   {isPlaying ? 'Pause' : 'Play'}
@@ -235,7 +235,9 @@ const Stream = () => {
                   {audioOnly ? 'Audio' : 'Video'}
                 </Button>
               </div>
+            </div>
 
+            <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
               <div className="inline-flex items-center gap-2 rounded-full border border-primary/10 bg-white/75 px-3 py-2">
                 <Clock3 className="h-4 w-4 text-primary" />
                 <span className="tabular-nums font-semibold text-foreground">{formatTime(elapsed)}</span>
