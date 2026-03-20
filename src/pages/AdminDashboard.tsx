@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CalendarDays, LogOut, Plus, RadioTower, RefreshCcw, Save, ShieldCheck, TimerReset, Trash2, Users2, Video } from 'lucide-react';
+import { ArrowRightLeft, CalendarDays, LogOut, Plus, RadioTower, RefreshCcw, Save, Search, ShieldCheck, TimerReset, Trash2, Users2, Video } from 'lucide-react';
 import { toast } from 'sonner';
 
 import ActiveViewersCount from '@/components/ActiveViewersCount';
@@ -19,6 +19,8 @@ import { api } from '@/lib/api';
 interface Branch {
   id: string;
   name: string;
+  attendance_count?: number;
+  staff_count?: number;
 }
 
 interface AdminSettings {
@@ -56,6 +58,7 @@ type TabId = 'stream' | 'attendance' | 'branches' | 'staff';
 type PendingConfirm =
   | { type: 'delete-branch'; id: string; title: string; description: string }
   | { type: 'delete-staff'; id: string; title: string; description: string }
+  | { type: 'merge-branch'; id: string; title: string; description: string }
   | null;
 
 const getErrorMessage = (error: unknown, fallback: string) =>
@@ -79,9 +82,12 @@ const AdminDashboard = () => {
   const [deletingBranchId, setDeletingBranchId] = useState<string | null>(null);
   const [deletingStaffId, setDeletingStaffId] = useState<string | null>(null);
   const [filterTitle, setFilterTitle] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [newBranch, setNewBranch] = useState('');
+  const [mergeSourceBranch, setMergeSourceBranch] = useState('');
+  const [mergeTargetBranch, setMergeTargetBranch] = useState('');
   const [activeTab, setActiveTab] = useState<TabId>('stream');
   const [channelId, setChannelId] = useState('');
   const [checkDay, setCheckDay] = useState('Sunday');
@@ -93,6 +99,7 @@ const AdminDashboard = () => {
   const [newStaffBranch, setNewStaffBranch] = useState('');
   const [newStaffPassword, setNewStaffPassword] = useState('');
   const [pendingConfirm, setPendingConfirm] = useState<PendingConfirm>(null);
+  const [mergingBranch, setMergingBranch] = useState(false);
 
   const fetchAll = useCallback(async (showRefresh = false) => {
     if (showRefresh) setRefreshing(true);
@@ -103,6 +110,7 @@ const AdminDashboard = () => {
         api.adminAction('get_branches'),
         api.getAttendanceData({
           ...(filterTitle ? { stream_title: filterTitle } : {}),
+          ...(searchQuery ? { q: searchQuery } : {}),
           ...(dateFrom ? { date_from: dateFrom } : {}),
           ...(dateTo ? { date_to: dateTo } : {}),
         }),
@@ -134,7 +142,7 @@ const AdminDashboard = () => {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [dateFrom, dateTo, filterTitle, navigate]);
+  }, [dateFrom, dateTo, filterTitle, navigate, searchQuery]);
 
   useEffect(() => {
     void fetchAll();
@@ -262,6 +270,25 @@ const AdminDashboard = () => {
     }
   };
 
+  const mergeBranch = async () => {
+    if (!mergeSourceBranch || !mergeTargetBranch || mergeSourceBranch === mergeTargetBranch) return;
+    setMergingBranch(true);
+    try {
+      const result = await api.adminAction('merge_branch', {
+        source_branch_id: mergeSourceBranch,
+        target_branch_id: mergeTargetBranch,
+      });
+      toast.success(`Merged ${result.merged_from} into ${result.merged_into}.`);
+      setMergeSourceBranch('');
+      setMergeTargetBranch('');
+      await fetchAll();
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, 'Unable to merge branches.'));
+    } finally {
+      setMergingBranch(false);
+    }
+  };
+
   const deleteStaff = async (id: string) => {
     setDeletingStaffId(id);
     try {
@@ -295,6 +322,8 @@ const AdminDashboard = () => {
     ? Boolean(pendingConfirm.id && deletingBranchId === pendingConfirm.id)
     : pendingConfirm?.type === 'delete-staff'
       ? Boolean(pendingConfirm.id && deletingStaffId === pendingConfirm.id)
+      : pendingConfirm?.type === 'merge-branch'
+        ? mergingBranch
       : false;
 
   if (loading) return <PageLoader label="Loading admin workspace..." />;
@@ -308,13 +337,23 @@ const AdminDashboard = () => {
         }}
         title={pendingConfirm?.title || 'Confirm action'}
         description={pendingConfirm?.description}
-        confirmLabel={pendingConfirm?.type === 'delete-staff' ? 'Delete Staff' : 'Delete Branch'}
+        confirmLabel={
+          pendingConfirm?.type === 'delete-staff'
+            ? 'Delete Staff'
+            : pendingConfirm?.type === 'merge-branch'
+              ? 'Merge Branches'
+              : 'Delete Branch'
+        }
         destructive
         loading={confirmLoading}
         onConfirm={() => {
           if (!pendingConfirm) return;
           if (pendingConfirm.type === 'delete-branch') {
             void deleteBranch(pendingConfirm.id).finally(() => setPendingConfirm(null));
+            return;
+          }
+          if (pendingConfirm.type === 'merge-branch') {
+            void mergeBranch().finally(() => setPendingConfirm(null));
             return;
           }
           void deleteStaff(pendingConfirm.id).finally(() => setPendingConfirm(null));
@@ -536,6 +575,13 @@ const AdminDashboard = () => {
                   </select>
                 </div>
                 <div className="space-y-1">
+                  <label className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Search</label>
+                  <div className="relative">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Name or email" className="h-10 w-48 bg-white/80 pl-9" />
+                  </div>
+                </div>
+                <div className="space-y-1">
                   <label className="text-xs uppercase tracking-[0.18em] text-muted-foreground">From</label>
                   <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="h-10 w-36 bg-white/80" />
                 </div>
@@ -628,6 +674,40 @@ const AdminDashboard = () => {
                     {addingBranch ? <LoadingSpinner size="sm" className="text-current" /> : <Plus className="h-4 w-4" />}
                     {addingBranch ? 'Adding...' : 'Add Branch'}
                   </Button>
+
+                  <div className="border-t border-primary/10 pt-4">
+                    <div className="mb-3 flex items-center gap-2">
+                      <ArrowRightLeft className="h-4 w-4 text-primary" />
+                      <p className="text-sm font-semibold text-foreground">Merge Branches</p>
+                    </div>
+                    <div className="grid gap-3">
+                      <select value={mergeSourceBranch} onChange={(e) => setMergeSourceBranch(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-white/80 px-3 text-sm">
+                        <option value="">Merge from...</option>
+                        {branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}
+                      </select>
+                      <select value={mergeTargetBranch} onChange={(e) => setMergeTargetBranch(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-white/80 px-3 text-sm">
+                        <option value="">Merge into...</option>
+                        {branches.filter((branch) => branch.id !== mergeSourceBranch).map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}
+                      </select>
+                      <Button
+                        variant="outline"
+                        disabled={!mergeSourceBranch || !mergeTargetBranch || mergeSourceBranch === mergeTargetBranch || mergingBranch}
+                        onClick={() => {
+                          const sourceName = branches.find((branch) => branch.id === mergeSourceBranch)?.name || 'source branch';
+                          const targetName = branches.find((branch) => branch.id === mergeTargetBranch)?.name || 'target branch';
+                          setPendingConfirm({
+                            type: 'merge-branch',
+                            id: mergeSourceBranch,
+                            title: 'Merge branches?',
+                            description: `Attendance records and staff from ${sourceName} will be moved to ${targetName}. The source branch will then be removed.`,
+                          });
+                        }}
+                      >
+                        {mergingBranch ? <LoadingSpinner size="sm" className="text-current" /> : <ArrowRightLeft className="h-4 w-4" />}
+                        {mergingBranch ? 'Merging...' : 'Merge Branch'}
+                      </Button>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
 
@@ -640,6 +720,7 @@ const AdminDashboard = () => {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Name</TableHead>
+                        <TableHead className="w-28">Records</TableHead>
                         <TableHead className="w-28">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -647,6 +728,7 @@ const AdminDashboard = () => {
                       {branches.map((branch) => (
                         <TableRow key={branch.id}>
                           <TableCell className="font-medium">{branch.name}</TableCell>
+                          <TableCell className="tabular-nums text-muted-foreground">{branch.attendance_count || 0}</TableCell>
                           <TableCell>
                             <Button
                               variant="ghost"
@@ -658,17 +740,23 @@ const AdminDashboard = () => {
                                 title: 'Delete branch?',
                                 description: `This will remove ${branch.name} from the branch list.`,
                               })}
-                              disabled={deletingBranchId === branch.id}
+                              disabled={deletingBranchId === branch.id || (branch.attendance_count || 0) > 0 || (branch.staff_count || 0) > 0}
                             >
                               {deletingBranchId === branch.id ? <LoadingSpinner size="sm" className="text-current" /> : <Trash2 className="h-4 w-4" />}
-                              {deletingBranchId === branch.id ? 'Deleting...' : 'Delete'}
+                              {(branch.attendance_count || 0) > 0
+                                ? 'Has History'
+                                : (branch.staff_count || 0) > 0
+                                  ? 'Has Staff'
+                                  : deletingBranchId === branch.id
+                                    ? 'Deleting...'
+                                    : 'Delete'}
                             </Button>
                           </TableCell>
                         </TableRow>
                       ))}
                       {branches.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={2} className="py-10 text-center text-muted-foreground">No branches yet.</TableCell>
+                          <TableCell colSpan={3} className="py-10 text-center text-muted-foreground">No branches yet.</TableCell>
                         </TableRow>
                       )}
                     </TableBody>

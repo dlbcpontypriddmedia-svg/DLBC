@@ -56,8 +56,32 @@ Deno.serve(async (req) => {
         return json({ settings: data }, 200, req);
       }
       case 'get_branches': {
-        const { data } = await sb.from('branches').select('*').order('name');
-        return json({ branches: data }, 200, req);
+        const [{ data: branches, error: branchError }, { data: records, error: recordError }, { data: staff, error: staffError }] = await Promise.all([
+          sb.from('branches').select('*').order('name'),
+          sb.from('attendance_records').select('branch_id'),
+          sb.from('attendance_staff').select('branch_id'),
+        ]);
+        if (branchError || recordError || staffError) {
+          return json({ error: branchError?.message || recordError?.message || staffError?.message || 'Unable to load branches' }, 400, req);
+        }
+
+        const attendanceByBranch = new Map<string, number>();
+        for (const record of records || []) {
+          attendanceByBranch.set(record.branch_id, (attendanceByBranch.get(record.branch_id) || 0) + 1);
+        }
+
+        const staffByBranch = new Map<string, number>();
+        for (const member of staff || []) {
+          staffByBranch.set(member.branch_id, (staffByBranch.get(member.branch_id) || 0) + 1);
+        }
+
+        return json({
+          branches: (branches || []).map((branch) => ({
+            ...branch,
+            attendance_count: attendanceByBranch.get(branch.id) || 0,
+            staff_count: staffByBranch.get(branch.id) || 0,
+          })),
+        }, 200, req);
       }
       case 'create_branch': {
         const { data, error } = await sb.from('branches').insert({ name: params.name }).select().single();
@@ -69,17 +93,92 @@ Deno.serve(async (req) => {
           .from('attendance_records')
           .select('id', { count: 'exact', head: true })
           .eq('branch_id', params.id);
+        const { count: staffCount, error: staffError } = await sb
+          .from('attendance_staff')
+          .select('id', { count: 'exact', head: true })
+          .eq('branch_id', params.id);
 
         if (recordError) return json({ error: recordError.message }, 400, req);
+        if (staffError) return json({ error: staffError.message }, 400, req);
         if ((recordCount || 0) > 0) {
           return json({
             error: 'This branch cannot be deleted because it already has attendance records. Delete the history first or keep the branch for reporting.',
+          }, 400, req);
+        }
+        if ((staffCount || 0) > 0) {
+          return json({
+            error: 'This branch cannot be deleted because staff accounts are still assigned to it. Reassign or merge the branch first.',
           }, 400, req);
         }
 
         const { error } = await sb.from('branches').delete().eq('id', params.id);
         if (error) return json({ error: error.message }, 400, req);
         return json({ success: true }, 200, req);
+      }
+      case 'merge_branch': {
+        if (!params.source_branch_id || !params.target_branch_id) {
+          return json({ error: 'Source and target branches are required.' }, 400, req);
+        }
+        if (params.source_branch_id === params.target_branch_id) {
+          return json({ error: 'Source and target branches must be different.' }, 400, req);
+        }
+
+        const { data: sourceBranch } = await sb.from('branches').select('id, name').eq('id', params.source_branch_id).single();
+        const { data: targetBranch } = await sb.from('branches').select('id, name').eq('id', params.target_branch_id).single();
+
+        if (!sourceBranch || !targetBranch) {
+          return json({ error: 'One or both branches could not be found.' }, 404, req);
+        }
+
+        const { data: sourceActiveRecords, error: sourceActiveError } = await sb
+          .from('attendance_records')
+          .select('id, email, stream_title, last_seen_at')
+          .eq('branch_id', sourceBranch.id)
+          .eq('is_archived', false);
+        if (sourceActiveError) return json({ error: sourceActiveError.message }, 400, req);
+
+        const { data: targetActiveRecords, error: targetActiveError } = await sb
+          .from('attendance_records')
+          .select('id, email, stream_title')
+          .eq('branch_id', targetBranch.id)
+          .eq('is_archived', false);
+        if (targetActiveError) return json({ error: targetActiveError.message }, 400, req);
+
+        const targetActiveKeys = new Set(
+          (targetActiveRecords || []).map((record) => `${record.email}::${record.stream_title}`),
+        );
+        const conflictingSourceIds = (sourceActiveRecords || [])
+          .filter((record) => targetActiveKeys.has(`${record.email}::${record.stream_title}`))
+          .map((record) => record.id);
+
+        if (conflictingSourceIds.length > 0) {
+          const { error: archiveConflictError } = await sb
+            .from('attendance_records')
+            .update({ is_archived: true, end_time: new Date().toISOString() })
+            .in('id', conflictingSourceIds);
+          if (archiveConflictError) return json({ error: archiveConflictError.message }, 400, req);
+        }
+
+        const { error: updateRecordsError } = await sb
+          .from('attendance_records')
+          .update({ branch_id: targetBranch.id, branch: targetBranch.name })
+          .eq('branch_id', sourceBranch.id);
+        if (updateRecordsError) return json({ error: updateRecordsError.message }, 400, req);
+
+        const { error: updateStaffError } = await sb
+          .from('attendance_staff')
+          .update({ branch_id: targetBranch.id })
+          .eq('branch_id', sourceBranch.id);
+        if (updateStaffError) return json({ error: updateStaffError.message }, 400, req);
+
+        const { error: deleteError } = await sb.from('branches').delete().eq('id', sourceBranch.id);
+        if (deleteError) return json({ error: deleteError.message }, 400, req);
+
+        return json({
+          success: true,
+          merged_from: sourceBranch.name,
+          merged_into: targetBranch.name,
+        }, 200, req);
       }
       case 'create_staff': {
         const hashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(params.password));

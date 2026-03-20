@@ -17,6 +17,7 @@ Deno.serve(async (req) => {
   const stream_title = url.searchParams.get('stream_title');
   const date_from = url.searchParams.get('date_from');
   const date_to = url.searchParams.get('date_to');
+  const q = url.searchParams.get('q');
   const archived = url.searchParams.get('archived') === 'true';
 
   let query = sb.from('attendance_records').select('*').eq('is_archived', archived);
@@ -27,6 +28,10 @@ Deno.serve(async (req) => {
   if (stream_title) query = query.eq('stream_title', stream_title);
   if (date_from) query = query.gte('timestamp', date_from);
   if (date_to) query = query.lte('timestamp', date_to);
+  if (q) {
+    const term = `%${q}%`;
+    query = query.or(`name.ilike.${term},email.ilike.${term},family_surname.ilike.${term}`);
+  }
 
   query = query.order('timestamp', { ascending: false }).limit(1000);
 

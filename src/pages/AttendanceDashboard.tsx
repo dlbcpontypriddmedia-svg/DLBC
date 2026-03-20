@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, RefreshCcw } from 'lucide-react';
+import { LogOut, RefreshCcw, Search } from 'lucide-react';
 import { toast } from 'sonner';
 
 import ActiveViewersCount from '@/components/ActiveViewersCount';
@@ -42,6 +42,7 @@ const AttendanceDashboard = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [filterTitle, setFilterTitle] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
 
@@ -59,6 +60,7 @@ const AttendanceDashboard = () => {
     try {
       const params: Record<string, string> = {};
       if (filterTitle) params.stream_title = filterTitle;
+      if (searchQuery) params.q = searchQuery;
       if (dateFrom) params.date_from = dateFrom;
       if (dateTo) params.date_to = dateTo;
 
@@ -76,7 +78,7 @@ const AttendanceDashboard = () => {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [dateFrom, dateTo, filterTitle, navigate]);
+  }, [dateFrom, dateTo, filterTitle, navigate, searchQuery]);
 
   useEffect(() => {
     void fetchData();
@@ -174,6 +176,13 @@ const AttendanceDashboard = () => {
                     <option value="">All services</option>
                     {titles.map((title) => <option key={title} value={title}>{title}</option>)}
                   </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Search</label>
+                  <div className="relative">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Name or email" className="h-10 w-48 bg-white/80 pl-9" />
+                  </div>
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs uppercase tracking-[0.18em] text-muted-foreground">From</label>

@@ -64,6 +64,7 @@ const Stream = () => {
   const [leaving, setLeaving] = useState(false);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
+  const [duplicateSessionNotice, setDuplicateSessionNotice] = useState(false);
   const videoId = youtubeUrl ? getVideoId(youtubeUrl) : null;
 
   useEffect(() => {
@@ -111,6 +112,10 @@ const Stream = () => {
           startTime.current = nextStartTime;
           setElapsed(Math.floor((Date.now() - nextStartTime) / 1000));
         }
+      }
+
+      if (response?.attendance?.resumed_from_another_device) {
+        setDuplicateSessionNotice(true);
       }
 
       if (response?.attendance && session) {
@@ -352,6 +357,11 @@ const Stream = () => {
         </header>
 
         <main className="rounded-[1.5rem] border border-white/70 bg-transparent p-4 md:p-6">
+          {duplicateSessionNotice && (
+            <div className="mb-4 rounded-[1.25rem] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              This attendance session was already active on another device. You have been connected to the same live attendance record.
+            </div>
+          )}
           <div ref={videoShellRef} className={`relative overflow-hidden rounded-[1.5rem] border border-primary/10 bg-slate-950 shadow-[0_30px_70px_-40px_rgba(0,0,0,0.9)] ${audioOnly ? 'h-28' : 'aspect-video'}`}>
             <div className="absolute left-4 top-4 z-10 flex flex-wrap items-center gap-2">
               <span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] backdrop-blur-sm ${
