@@ -1,4 +1,5 @@
 import { corsResponse, getCorsHeaders } from '../_shared/cors.ts';
+import { sendRealtimeBroadcast } from '../_shared/realtime.ts';
 import { getServiceClient, SETTINGS_ID } from '../_shared/supabase.ts';
 
 Deno.serve(async (req) => {
@@ -32,6 +33,18 @@ Deno.serve(async (req) => {
         attendance_auto_stop_at: null,
         updated_at: now.toISOString(),
       }).eq('id', SETTINGS_ID);
+      await Promise.all([
+        sendRealtimeBroadcast({
+          topic: 'admin:attendance',
+          event: 'attendance_changed',
+          payload: { action: 'auto_stopped' },
+        }),
+        sendRealtimeBroadcast({
+          topic: 'stream:global',
+          event: 'stream_updated',
+          payload: { action: 'auto_stopped' },
+        }),
+      ]);
       return json({ action: 'auto_stopped' }, 200, req);
     }
   }
@@ -121,6 +134,19 @@ Deno.serve(async (req) => {
           attendance_auto_stop_at: autoStopAt.toISOString(),
           updated_at: now.toISOString(),
         }).eq('id', SETTINGS_ID);
+
+        await Promise.all([
+          sendRealtimeBroadcast({
+            topic: 'admin:attendance',
+            event: 'attendance_changed',
+            payload: { action: 'live_detected', url: liveUrl },
+          }),
+          sendRealtimeBroadcast({
+            topic: 'stream:global',
+            event: 'stream_updated',
+            payload: { action: 'live_detected', url: liveUrl },
+          }),
+        ]);
 
         return json({ action: 'live_detected', videoId, title, url: liveUrl }, 200, req);
       }

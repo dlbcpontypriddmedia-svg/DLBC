@@ -1,5 +1,6 @@
 import { corsResponse, getCorsHeaders } from '../_shared/cors.ts';
 import { verifyJwt, getSessionToken } from '../_shared/auth.ts';
+import { sendRealtimeBroadcast } from '../_shared/realtime.ts';
 import { getServiceClient, SETTINGS_ID } from '../_shared/supabase.ts';
 
 Deno.serve(async (req) => {
@@ -33,6 +34,18 @@ Deno.serve(async (req) => {
         const { data } = await sb.from('stream_settings')
           .update({ ...params.settings, updated_at: new Date().toISOString() })
           .eq('id', SETTINGS_ID).select().single();
+        await Promise.all([
+          sendRealtimeBroadcast({
+            topic: 'admin:workspace',
+            event: 'workspace_updated',
+            payload: { action: 'update_settings' },
+          }),
+          sendRealtimeBroadcast({
+            topic: 'stream:global',
+            event: 'stream_updated',
+            payload: { action: 'update_settings' },
+          }),
+        ]);
         return json({ settings: data }, 200, req);
       }
       case 'start_attendance': {
@@ -43,6 +56,18 @@ Deno.serve(async (req) => {
             updated_at: new Date().toISOString(),
           })
           .eq('id', SETTINGS_ID).select().single();
+        await Promise.all([
+          sendRealtimeBroadcast({
+            topic: 'admin:attendance',
+            event: 'attendance_changed',
+            payload: { action: 'start_attendance' },
+          }),
+          sendRealtimeBroadcast({
+            topic: 'stream:global',
+            event: 'stream_updated',
+            payload: { action: 'start_attendance' },
+          }),
+        ]);
         return json({ settings: data }, 200, req);
       }
       case 'stop_attendance': {
@@ -53,6 +78,18 @@ Deno.serve(async (req) => {
             updated_at: new Date().toISOString(),
           })
           .eq('id', SETTINGS_ID).select().single();
+        await Promise.all([
+          sendRealtimeBroadcast({
+            topic: 'admin:attendance',
+            event: 'attendance_changed',
+            payload: { action: 'stop_attendance' },
+          }),
+          sendRealtimeBroadcast({
+            topic: 'stream:global',
+            event: 'stream_updated',
+            payload: { action: 'stop_attendance' },
+          }),
+        ]);
         return json({ settings: data }, 200, req);
       }
       case 'get_branches': {
@@ -86,6 +123,11 @@ Deno.serve(async (req) => {
       case 'create_branch': {
         const { data, error } = await sb.from('branches').insert({ name: params.name }).select().single();
         if (error) return json({ error: error.message }, 400, req);
+        await sendRealtimeBroadcast({
+          topic: 'admin:workspace',
+          event: 'workspace_updated',
+          payload: { action: 'create_branch', branch_id: data.id },
+        });
         return json({ branch: data }, 200, req);
       }
       case 'delete_branch': {
@@ -113,6 +155,11 @@ Deno.serve(async (req) => {
 
         const { error } = await sb.from('branches').delete().eq('id', params.id);
         if (error) return json({ error: error.message }, 400, req);
+        await sendRealtimeBroadcast({
+          topic: 'admin:workspace',
+          event: 'workspace_updated',
+          payload: { action: 'delete_branch', branch_id: params.id },
+        });
         return json({ success: true }, 200, req);
       }
       case 'merge_branch': {
@@ -174,6 +221,27 @@ Deno.serve(async (req) => {
         const { error: deleteError } = await sb.from('branches').delete().eq('id', sourceBranch.id);
         if (deleteError) return json({ error: deleteError.message }, 400, req);
 
+        await Promise.all([
+          sendRealtimeBroadcast({
+            topic: 'admin:workspace',
+            event: 'workspace_updated',
+            payload: {
+              action: 'merge_branch',
+              source_branch_id: sourceBranch.id,
+              target_branch_id: targetBranch.id,
+            },
+          }),
+          sendRealtimeBroadcast({
+            topic: 'admin:attendance',
+            event: 'attendance_changed',
+            payload: {
+              action: 'merge_branch',
+              source_branch_id: sourceBranch.id,
+              target_branch_id: targetBranch.id,
+            },
+          }),
+        ]);
+
         return json({
           success: true,
           merged_from: sourceBranch.name,
@@ -188,11 +256,21 @@ Deno.serve(async (req) => {
           .select('id, branch_id, created_at')
           .single();
         if (error) return json({ error: error.message }, 400, req);
+        await sendRealtimeBroadcast({
+          topic: 'admin:workspace',
+          event: 'workspace_updated',
+          payload: { action: 'create_staff', branch_id: params.branch_id, staff_id: data.id },
+        });
         return json({ staff: data }, 200, req);
       }
       case 'delete_staff': {
         const { error } = await sb.from('attendance_staff').delete().eq('id', params.id);
         if (error) return json({ error: error.message }, 400, req);
+        await sendRealtimeBroadcast({
+          topic: 'admin:workspace',
+          event: 'workspace_updated',
+          payload: { action: 'delete_staff', staff_id: params.id },
+        });
         return json({ success: true }, 200, req);
       }
       case 'get_staff': {

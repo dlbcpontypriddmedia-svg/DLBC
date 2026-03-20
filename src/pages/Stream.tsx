@@ -7,6 +7,8 @@ import ActiveViewersCount from '@/components/ActiveViewersCount';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import Logo from '@/components/Logo';
 import PageLoader from '@/components/PageLoader';
+import { useRealtimeRefresh } from '@/hooks/useRealtimeRefresh';
+import { useStreamPresenceNotifications } from '@/hooks/useStreamPresenceNotifications';
 import { Button } from '@/components/ui/button';
 import { getViewerSession, clearViewerSession, updateViewerSession } from '@/lib/session';
 import { api } from '@/lib/api';
@@ -66,6 +68,11 @@ const Stream = () => {
   const [isMuted, setIsMuted] = useState(false);
   const [duplicateSessionNotice, setDuplicateSessionNotice] = useState(false);
   const videoId = youtubeUrl ? getVideoId(youtubeUrl) : null;
+
+  useStreamPresenceNotifications({
+    branchId: session?.branch_id,
+    currentSessionId: session?.stream_session_id,
+  });
 
   useEffect(() => {
     if (!session) {
@@ -140,6 +147,16 @@ const Stream = () => {
     }
   }, [session, streamTitle]);
 
+  useRealtimeRefresh({
+    subscriptions: [{ topic: 'stream:global', events: ['stream_updated'] }],
+    onRefresh: () => {
+      if (session) {
+        void sendHeartbeat();
+      }
+    },
+    enabled: Boolean(session),
+  });
+
   useEffect(() => {
     if (!session) return;
     void sendHeartbeat(true);
@@ -165,7 +182,22 @@ const Stream = () => {
       if (document.visibilityState === 'hidden') void sendHeartbeat();
     };
     const handleBeforeUnload = () => {
-      void sendHeartbeat();
+      if (!session) return;
+      api.sendLeaveHeartbeat({
+        name: session.name,
+        email: session.email,
+        branch: session.branch,
+        branch_id: session.branch_id,
+        stream_session_id: session.stream_session_id,
+        stream_title: streamTitle,
+        attendance_type: session.attendance_type,
+        age_category: session.age_category,
+        family_surname: session.family_surname,
+        family_adult_count: session.family_adult_count,
+        family_young_adult_count: session.family_young_adult_count,
+        family_youth_count: session.family_youth_count,
+        family_children_count: session.family_children_count,
+      });
     };
     document.addEventListener('visibilitychange', handleVisibility);
     window.addEventListener('beforeunload', handleBeforeUnload);
@@ -173,11 +205,27 @@ const Stream = () => {
       document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [sendHeartbeat]);
+  }, [sendHeartbeat, session, streamTitle]);
 
   const handleLeave = async () => {
     setLeaving(true);
-    await sendHeartbeat();
+    if (session) {
+      api.sendLeaveHeartbeat({
+        name: session.name,
+        email: session.email,
+        branch: session.branch,
+        branch_id: session.branch_id,
+        stream_session_id: session.stream_session_id,
+        stream_title: streamTitle,
+        attendance_type: session.attendance_type,
+        age_category: session.age_category,
+        family_surname: session.family_surname,
+        family_adult_count: session.family_adult_count,
+        family_young_adult_count: session.family_young_adult_count,
+        family_youth_count: session.family_youth_count,
+        family_children_count: session.family_children_count,
+      });
+    }
     clearViewerSession();
     navigate('/');
   };

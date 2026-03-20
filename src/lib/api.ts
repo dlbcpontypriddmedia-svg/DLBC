@@ -60,5 +60,17 @@ export const api = {
   getActiveViewers: (branch_id?: string) =>
     call('active-viewers', branch_id ? { branch_id } : {}, 'GET', { credentials: 'omit' }),
 
+  getActiveViewerMembers: (branch_id: string) =>
+    call('active-viewers', { branch_id, include_members: 'true' }, 'GET', { credentials: 'omit' }),
+
+  sendLeaveHeartbeat: (data: Record<string, unknown>) => {
+    if (typeof navigator === 'undefined' || typeof navigator.sendBeacon !== 'function') return false;
+
+    const blob = new Blob([JSON.stringify({ ...data, presence_event: 'leave' })], {
+      type: 'application/json',
+    });
+    return navigator.sendBeacon(`${BASE}/attendance-heartbeat`, blob);
+  },
+
   getPublicBranches: () => call('public-branches', undefined, 'GET', { credentials: 'omit' }),
 };

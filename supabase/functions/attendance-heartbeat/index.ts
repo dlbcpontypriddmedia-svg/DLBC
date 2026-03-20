@@ -1,4 +1,5 @@
 import { corsResponse, getCorsHeaders } from '../_shared/cors.ts';
+import { sendRealtimeBroadcast } from '../_shared/realtime.ts';
 import { getServiceClient, SETTINGS_ID } from '../_shared/supabase.ts';
 
 Deno.serve(async (req) => {
@@ -8,8 +9,11 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { name, email, branch, branch_id, stream_session_id, stream_title,
       attendance_type, age_category, family_surname,
-      family_adult_count, family_young_adult_count, family_youth_count, family_children_count } = body;
+      family_adult_count, family_young_adult_count, family_youth_count, family_children_count, presence_event } = body;
     const normalizedEmail = email?.trim().toLowerCase();
+    const isLeaving = presence_event === 'leave';
+    const displayName = family_surname || name?.trim() || (attendance_type === 'Family' ? 'Family' : 'Viewer');
+    const activeCutoff = new Date(Date.now() - 2 * 60 * 1000).toISOString();
 
     // Validate required fields
     if (name && (typeof name !== 'string' || name.length > 200)) return err('Invalid name', req);
@@ -36,7 +40,7 @@ Deno.serve(async (req) => {
 
     // Check if record exists for this exact client session first.
     const { data: existing } = await sb.from('attendance_records')
-      .select('id, start_time, duration_seconds, stream_session_id')
+      .select('id, start_time, duration_seconds, stream_session_id, last_seen_at')
       .eq('email', normalizedEmail)
       .eq('stream_session_id', stream_session_id)
       .eq('branch', branch)
@@ -47,7 +51,7 @@ Deno.serve(async (req) => {
     const { data: resumable } = existing
       ? { data: existing }
       : await sb.from('attendance_records')
-        .select('id, start_time, duration_seconds, stream_session_id')
+        .select('id, start_time, duration_seconds, stream_session_id, last_seen_at')
         .eq('email', normalizedEmail)
         .eq('branch', branch)
         .eq('stream_title', activeStreamTitle)
@@ -58,8 +62,10 @@ Deno.serve(async (req) => {
         .maybeSingle();
 
     if (resumable) {
+      const wasActive = Boolean(resumable.last_seen_at && resumable.last_seen_at >= activeCutoff);
       const startTime = new Date(resumable.start_time).getTime();
       const durationSeconds = Math.floor((Date.now() - startTime) / 1000);
+      const inactiveSeenAt = new Date(Date.now() - 5 * 60 * 1000).toISOString();
       await sb.from('attendance_records')
         .update({
           name: name?.trim() || null,
@@ -67,7 +73,8 @@ Deno.serve(async (req) => {
           branch,
           branch_id,
           stream_title: activeStreamTitle,
-          last_seen_at: now,
+          last_seen_at: isLeaving ? inactiveSeenAt : now,
+          end_time: isLeaving ? now : null,
           duration_seconds: durationSeconds,
           attendance_type: attendance_type || 'Single',
           age_category: age_category || null,
@@ -78,6 +85,43 @@ Deno.serve(async (req) => {
           family_children_count: family_children_count || null,
         })
         .eq('id', resumable.id);
+
+      if (isLeaving && wasActive) {
+        await Promise.all([
+          sendRealtimeBroadcast({
+            topic: `branch:${branch_id}`,
+            event: 'viewer_left',
+            payload: {
+              branch_id,
+              stream_session_id: resumable.stream_session_id,
+              display_name: displayName,
+            },
+          }),
+          sendRealtimeBroadcast({
+            topic: 'admin:attendance',
+            event: 'attendance_changed',
+            payload: { branch_id, stream_session_id: resumable.stream_session_id },
+          }),
+        ]);
+      } else if (!isLeaving && !wasActive) {
+        await Promise.all([
+          sendRealtimeBroadcast({
+            topic: `branch:${branch_id}`,
+            event: 'viewer_joined',
+            payload: {
+              branch_id,
+              stream_session_id: resumable.stream_session_id,
+              display_name: displayName,
+            },
+          }),
+          sendRealtimeBroadcast({
+            topic: 'admin:attendance',
+            event: 'attendance_changed',
+            payload: { branch_id, stream_session_id: resumable.stream_session_id },
+          }),
+        ]);
+      }
+
       return json({
         status: existing ? 'updated' : 'resumed',
         id: resumable.id,
@@ -94,6 +138,21 @@ Deno.serve(async (req) => {
         },
       }, 200, req);
     } else {
+      if (isLeaving) {
+        return json({
+          status: 'ignored',
+          attendance: {
+            stream_session_id,
+            resumed_from_another_device: false,
+          },
+          stream: {
+            youtube_url: settings?.youtube_url || '',
+            stream_title: activeStreamTitle,
+            is_attendance_active: settings?.is_attendance_active ?? false,
+          },
+        }, 200, req);
+      }
+
       const payload = {
         name: name?.trim() || null,
         email: normalizedEmail,
@@ -103,6 +162,7 @@ Deno.serve(async (req) => {
         stream_title: activeStreamTitle,
         start_time: now,
         last_seen_at: now,
+        end_time: null,
         duration_seconds: 0,
         attendance_type: attendance_type || 'Single',
         age_category: age_category || null,
@@ -116,7 +176,7 @@ Deno.serve(async (req) => {
 
       if (error?.code === '23505') {
         const { data: conflicted } = await sb.from('attendance_records')
-          .select('id, start_time, stream_session_id')
+          .select('id, start_time, stream_session_id, last_seen_at')
           .eq('email', normalizedEmail)
           .eq('branch_id', branch_id)
           .eq('stream_title', activeStreamTitle)
@@ -124,16 +184,37 @@ Deno.serve(async (req) => {
           .maybeSingle();
 
         if (conflicted) {
+          const wasActive = Boolean(conflicted.last_seen_at && conflicted.last_seen_at >= activeCutoff);
           const durationSeconds = Math.floor((Date.now() - new Date(conflicted.start_time).getTime()) / 1000);
           await sb.from('attendance_records')
             .update({
               ...payload,
               stream_session_id: conflicted.stream_session_id,
               last_seen_at: now,
+              end_time: null,
               duration_seconds: durationSeconds,
               stream_title: activeStreamTitle,
             })
             .eq('id', conflicted.id);
+
+          if (!wasActive) {
+            await Promise.all([
+              sendRealtimeBroadcast({
+                topic: `branch:${branch_id}`,
+                event: 'viewer_joined',
+                payload: {
+                  branch_id,
+                  stream_session_id: conflicted.stream_session_id,
+                  display_name: displayName,
+                },
+              }),
+              sendRealtimeBroadcast({
+                topic: 'admin:attendance',
+                event: 'attendance_changed',
+                payload: { branch_id, stream_session_id: conflicted.stream_session_id },
+              }),
+            ]);
+          }
 
           return json({
             status: 'resumed',
@@ -142,6 +223,7 @@ Deno.serve(async (req) => {
               stream_session_id: conflicted.stream_session_id,
               start_time: conflicted.start_time,
               duration_seconds: durationSeconds,
+              resumed_from_another_device: true,
             },
             stream: {
               youtube_url: settings?.youtube_url || '',
@@ -153,6 +235,22 @@ Deno.serve(async (req) => {
       }
 
       if (error) return json({ error: error.message }, 500, req);
+      await Promise.all([
+        sendRealtimeBroadcast({
+          topic: `branch:${branch_id}`,
+          event: 'viewer_joined',
+          payload: {
+            branch_id,
+            stream_session_id,
+            display_name: displayName,
+          },
+        }),
+        sendRealtimeBroadcast({
+          topic: 'admin:attendance',
+          event: 'attendance_changed',
+          payload: { branch_id, stream_session_id },
+        }),
+      ]);
       return json({
         status: 'created',
         id: data.id,

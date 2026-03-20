@@ -1,24 +1,33 @@
-import { useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { Users } from 'lucide-react';
 import { api } from '@/lib/api';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { useRealtimeRefresh } from '@/hooks/useRealtimeRefresh';
 
 const ActiveViewersCount = ({ branchId, compact = false, iconOnly = false }: { branchId?: string; compact?: boolean; iconOnly?: boolean }) => {
   const [count, setCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const intervalRef = useRef<ReturnType<typeof setInterval>>();
 
-  useEffect(() => {
-    const fetch = () => {
-      api.getActiveViewers(branchId)
-        .then(r => setCount(r.count || 0))
-        .catch(() => {})
-        .finally(() => setLoading(false));
-    };
-    fetch();
-    intervalRef.current = setInterval(fetch, 30000);
-    return () => clearInterval(intervalRef.current);
+  const fetchCount = useCallback(() => {
+    api.getActiveViewers(branchId)
+      .then(r => setCount(r.count || 0))
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, [branchId]);
+
+  useRealtimeRefresh({
+    subscriptions: branchId
+      ? [{ topic: `branch:${branchId}`, events: ['viewer_joined', 'viewer_left'] }]
+      : [{ topic: 'admin:attendance', events: ['attendance_changed'] }],
+    onRefresh: fetchCount,
+  });
+
+  useEffect(() => {
+    fetchCount();
+    intervalRef.current = setInterval(fetchCount, 30000);
+    return () => clearInterval(intervalRef.current);
+  }, [fetchCount]);
 
   return (
     <div className={compact

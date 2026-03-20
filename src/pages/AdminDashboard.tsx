@@ -9,6 +9,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import Logo from '@/components/Logo';
 import PageLoader from '@/components/PageLoader';
 import PDFExportButton from '@/components/PDFExportButton';
+import { useRealtimeRefresh } from '@/hooks/useRealtimeRefresh';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -147,6 +148,17 @@ const AdminDashboard = () => {
   useEffect(() => {
     void fetchAll();
   }, [fetchAll]);
+
+  useRealtimeRefresh({
+    subscriptions: [
+      { topic: 'admin:attendance', events: ['attendance_changed'] },
+      { topic: 'admin:workspace', events: ['workspace_updated'] },
+      { topic: 'stream:global', events: ['stream_updated'] },
+    ],
+    onRefresh: () => {
+      void fetchAll();
+    },
+  });
 
   const handleLogout = async () => {
     setLoggingOut(true);
