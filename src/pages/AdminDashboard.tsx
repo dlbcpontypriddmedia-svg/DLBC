@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Plus, RadioTower, RefreshCcw, Save, ShieldCheck, Trash2 } from 'lucide-react';
+import { CalendarDays, LogOut, Plus, RadioTower, RefreshCcw, Save, ShieldCheck, TimerReset, Trash2, Users2, Video } from 'lucide-react';
 import { toast } from 'sonner';
 
 import ActiveViewersCount from '@/components/ActiveViewersCount';
@@ -283,6 +283,10 @@ const AdminDashboard = () => {
     { id: 'branches' as const, label: 'Branches' },
     { id: 'staff' as const, label: 'Staff' },
   ], []);
+  const totalDurationSeconds = records.reduce((sum, record) => sum + (record.duration_seconds || 0), 0);
+  const latestRecordDate = records[0]?.timestamp ? new Date(records[0].timestamp).toLocaleString() : 'No records yet';
+  const branchCount = branches.length;
+  const staffCount = staffList.length;
 
   if (loading) return <PageLoader label="Loading admin workspace..." />;
 
@@ -311,27 +315,60 @@ const AdminDashboard = () => {
 
         <main className="space-y-4">
           <section className="surface-panel p-6">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-              <div className="space-y-2">
-                <p className="text-sm font-semibold uppercase tracking-[0.28em] text-primary/75">Control Center</p>
-                <h1 className="text-3xl font-semibold text-foreground">Admin Dashboard</h1>
-                <p className="max-w-2xl text-sm text-muted-foreground">
-                  Manage stream automation, run live checks, review attendance data, maintain branches, and provision staff accounts from one secured workspace.
-                </p>
+            <div className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr] xl:items-end">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold uppercase tracking-[0.28em] text-primary/75">Control Center</p>
+                  <h1 className="text-3xl font-semibold text-foreground">Admin Dashboard</h1>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                  <div className="rounded-[1.25rem] border border-primary/10 bg-white/70 p-4">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Users2 className="h-4 w-4 text-primary" />
+                      <span className="text-xs font-semibold uppercase tracking-[0.18em]">Attendance</span>
+                    </div>
+                    <p className="mt-3 text-2xl font-semibold text-foreground">{records.length}</p>
+                  </div>
+                  <div className="rounded-[1.25rem] border border-primary/10 bg-white/70 p-4">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <TimerReset className="h-4 w-4 text-primary" />
+                      <span className="text-xs font-semibold uppercase tracking-[0.18em]">Watch Time</span>
+                    </div>
+                    <p className="mt-3 text-2xl font-semibold text-foreground">{formatDuration(totalDurationSeconds)}</p>
+                  </div>
+                  <div className="rounded-[1.25rem] border border-primary/10 bg-white/70 p-4">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <CalendarDays className="h-4 w-4 text-primary" />
+                      <span className="text-xs font-semibold uppercase tracking-[0.18em]">Branches</span>
+                    </div>
+                    <p className="mt-3 text-2xl font-semibold text-foreground">{branchCount}</p>
+                  </div>
+                  <div className="rounded-[1.25rem] border border-primary/10 bg-white/70 p-4">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <ShieldCheck className="h-4 w-4 text-primary" />
+                      <span className="text-xs font-semibold uppercase tracking-[0.18em]">Staff</span>
+                    </div>
+                    <p className="mt-3 text-2xl font-semibold text-foreground">{staffCount}</p>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center gap-3 rounded-2xl border border-primary/10 bg-primary/[0.03] px-4 py-3 text-sm text-muted-foreground">
-                <ShieldCheck className="h-5 w-5 text-primary" />
-                Every action runs through protected Supabase edge functions.
+
+              <div className="grid gap-3">
+                <div className="rounded-[1.25rem] border border-primary/10 bg-primary/[0.04] p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/80">Latest Activity</p>
+                  <p className="mt-2 text-lg font-semibold text-foreground">{latestRecordDate}</p>
+                </div>
               </div>
             </div>
           </section>
 
-          <div className="surface-panel flex gap-1 p-1">
+          <div className="surface-panel grid gap-1 p-1 sm:grid-cols-4">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 rounded-[1rem] px-3 py-3 text-sm font-semibold transition-all ${
+                className={`rounded-[1rem] px-3 py-3 text-sm font-semibold transition-all ${
                   activeTab === tab.id
                     ? 'bg-primary text-primary-foreground shadow-sm'
                     : 'text-muted-foreground hover:bg-white hover:text-foreground'
@@ -343,18 +380,42 @@ const AdminDashboard = () => {
           </div>
 
           {activeTab === 'stream' && (
-            <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
-              <Card className="surface-panel border-none shadow-none">
-                <CardHeader>
-                  <CardTitle className="text-xl">Stream Status</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-5">
-                  <div className="flex flex-wrap items-center gap-3">
+            <div className="grid gap-4 xl:grid-cols-[0.88fr_1.12fr]">
+              <div className="space-y-4">
+                <section className="surface-panel p-5">
+                  <div className="flex flex-wrap items-start justify-between gap-4">
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Video className="h-4 w-4 text-primary" />
+                        <span className="text-xs font-semibold uppercase tracking-[0.18em]">Stream Operations</span>
+                      </div>
+                      <h2 className="text-2xl font-semibold text-foreground">Current Broadcast</h2>
+                    </div>
                     <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] ${
                       settings?.is_attendance_active ? 'bg-emerald-100 text-emerald-700' : 'bg-muted text-muted-foreground'
                     }`}>
                       {settings?.is_attendance_active ? 'Attendance Active' : 'Attendance Inactive'}
                     </span>
+                  </div>
+
+                  <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                    <div className="rounded-2xl border border-primary/10 bg-white/70 p-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Live Title</p>
+                      <p className="mt-2 line-clamp-2 font-semibold text-foreground">{settings?.stream_title || 'No stream title yet'}</p>
+                    </div>
+                    <div className="rounded-2xl border border-primary/10 bg-white/70 p-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Last API Check</p>
+                      <p className="mt-2 font-semibold text-foreground">
+                        {settings?.last_api_check_time ? new Date(settings.last_api_check_time).toLocaleString() : 'Not checked yet'}
+                      </p>
+                    </div>
+                    <div className="rounded-2xl border border-primary/10 bg-white/70 p-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Manual URL</p>
+                      <p className="mt-2 truncate font-semibold text-foreground">{settings?.youtube_url || 'Not set'}</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 flex flex-wrap gap-3">
                     <Button
                       size="sm"
                       variant={settings?.is_attendance_active ? 'destructive' : 'default'}
@@ -368,21 +429,25 @@ const AdminDashboard = () => {
                           ? 'Stop Attendance'
                           : 'Start Attendance'}
                     </Button>
+                    <Button variant="outline" onClick={checkLiveNow} disabled={checkingLive}>
+                      {checkingLive ? <LoadingSpinner size="sm" className="text-current" /> : <RadioTower className="h-4 w-4" />}
+                      {checkingLive ? 'Checking...' : 'Check Live Now'}
+                    </Button>
                   </div>
+                </section>
 
-                  <div className="space-y-2 text-sm text-muted-foreground">
-                    <p>Current URL: <span className="font-medium text-foreground">{settings?.youtube_url || 'Not set'}</span></p>
-                    <p>Current Title: <span className="font-medium text-foreground">{settings?.stream_title || 'Not set'}</span></p>
-                    {settings?.last_api_check_time && (
-                      <p>Last API Check: <span className="font-medium text-foreground">{new Date(settings.last_api_check_time).toLocaleString()}</span></p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+                <section className="surface-panel p-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/80">Tracked URL</p>
+                  <p className="mt-2 break-all text-sm text-foreground">{settings?.youtube_url || 'No YouTube URL configured.'}</p>
+                </section>
+              </div>
 
               <Card className="surface-panel border-none shadow-none">
-                <CardHeader>
-                  <CardTitle className="text-xl">Auto-Detection Settings</CardTitle>
+                <CardHeader className="pb-3">
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/80">Automation</p>
+                    <CardTitle className="text-2xl">Auto-Detection Settings</CardTitle>
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-5">
                   <div className="grid gap-4 md:grid-cols-2">
@@ -418,14 +483,14 @@ const AdminDashboard = () => {
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-3">
+                  <div className="flex flex-wrap gap-3 border-t border-primary/10 pt-4">
                     <Button onClick={saveSettings} disabled={savingSettings}>
                       {savingSettings ? <LoadingSpinner size="sm" className="text-current" /> : <Save className="h-4 w-4" />}
                       {savingSettings ? 'Saving...' : 'Save Settings'}
                     </Button>
                     <Button variant="outline" onClick={checkLiveNow} disabled={checkingLive}>
                       {checkingLive ? <LoadingSpinner size="sm" className="text-current" /> : <RadioTower className="h-4 w-4" />}
-                      {checkingLive ? 'Checking...' : 'Check Live Now'}
+                      {checkingLive ? 'Checking...' : 'Run Live Check'}
                     </Button>
                   </div>
                 </CardContent>
@@ -456,6 +521,21 @@ const AdminDashboard = () => {
                   {refreshing ? 'Refreshing...' : 'Refresh'}
                 </Button>
                 <PDFExportButton records={records} serviceTitle={filterTitle || undefined} />
+              </section>
+
+              <section className="grid gap-3 md:grid-cols-3">
+                <div className="surface-panel p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Filtered Records</p>
+                  <p className="mt-2 text-2xl font-semibold text-foreground">{records.length}</p>
+                </div>
+                <div className="surface-panel p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Services Visible</p>
+                  <p className="mt-2 text-2xl font-semibold text-foreground">{titles.length}</p>
+                </div>
+                <div className="surface-panel p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Total Watch Time</p>
+                  <p className="mt-2 text-2xl font-semibold text-foreground">{formatDuration(totalDurationSeconds)}</p>
+                </div>
               </section>
 
               <Card className="surface-panel border-none shadow-none">
@@ -509,7 +589,7 @@ const AdminDashboard = () => {
           {activeTab === 'branches' && (
             <div className="grid gap-4 xl:grid-cols-[0.85fr_1.15fr]">
               <Card className="surface-panel border-none shadow-none">
-                <CardHeader>
+                <CardHeader className="pb-3">
                   <CardTitle className="text-xl">Add Branch</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -525,7 +605,7 @@ const AdminDashboard = () => {
               </Card>
 
               <Card className="surface-panel border-none shadow-none">
-                <CardHeader>
+                <CardHeader className="pb-3">
                   <CardTitle className="text-xl">Branches</CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
@@ -563,7 +643,7 @@ const AdminDashboard = () => {
           {activeTab === 'staff' && (
             <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
               <Card className="surface-panel border-none shadow-none">
-                <CardHeader>
+                <CardHeader className="pb-3">
                   <CardTitle className="text-xl">Add Staff Account</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -586,7 +666,7 @@ const AdminDashboard = () => {
               </Card>
 
               <Card className="surface-panel border-none shadow-none">
-                <CardHeader>
+                <CardHeader className="pb-3">
                   <CardTitle className="text-xl">Staff Accounts</CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">

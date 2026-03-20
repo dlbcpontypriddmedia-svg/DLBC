@@ -93,7 +93,7 @@ Deno.serve(async (req) => {
         },
       }, 200, req);
     } else {
-      const { data, error } = await sb.from('attendance_records').insert({
+      const payload = {
         name: name?.trim() || null,
         email: normalizedEmail,
         branch,
@@ -110,7 +110,47 @@ Deno.serve(async (req) => {
         family_young_adult_count: family_young_adult_count || null,
         family_youth_count: family_youth_count || null,
         family_children_count: family_children_count || null,
-      }).select('id').single();
+      };
+      const { data, error } = await sb.from('attendance_records').insert(payload).select('id').single();
+
+      if (error?.code === '23505') {
+        const { data: conflicted } = await sb.from('attendance_records')
+          .select('id, start_time, stream_session_id')
+          .eq('email', normalizedEmail)
+          .eq('branch_id', branch_id)
+          .eq('stream_title', activeStreamTitle)
+          .eq('is_archived', false)
+          .maybeSingle();
+
+        if (conflicted) {
+          const durationSeconds = Math.floor((Date.now() - new Date(conflicted.start_time).getTime()) / 1000);
+          await sb.from('attendance_records')
+            .update({
+              ...payload,
+              stream_session_id: conflicted.stream_session_id,
+              last_seen_at: now,
+              duration_seconds: durationSeconds,
+              stream_title: activeStreamTitle,
+            })
+            .eq('id', conflicted.id);
+
+          return json({
+            status: 'resumed',
+            id: conflicted.id,
+            attendance: {
+              stream_session_id: conflicted.stream_session_id,
+              start_time: conflicted.start_time,
+              duration_seconds: durationSeconds,
+            },
+            stream: {
+              youtube_url: settings?.youtube_url || '',
+              stream_title: activeStreamTitle,
+              is_attendance_active: settings?.is_attendance_active ?? false,
+            },
+          }, 200, req);
+        }
+      }
+
       if (error) return json({ error: error.message }, 500, req);
       return json({
         status: 'created',

@@ -36,6 +36,24 @@ Deno.serve(async (req) => {
     }
   }
 
+  // If a live stream is already being tracked within the active attendance window,
+  // avoid burning API quota on repeated YouTube checks.
+  if (
+    !force &&
+    settings.is_attendance_active &&
+    settings.youtube_url &&
+    settings.attendance_auto_stop_at &&
+    now < new Date(settings.attendance_auto_stop_at)
+  ) {
+    return json({
+      action: 'already_tracking',
+      reason: 'active_attendance_window',
+      url: settings.youtube_url,
+      title: settings.stream_title,
+      attendance_auto_stop_at: settings.attendance_auto_stop_at,
+    }, 200, req);
+  }
+
   if (!force) {
     // Check day
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
