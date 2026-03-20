@@ -182,13 +182,13 @@ const AttendanceDashboard = () => {
                 </p>
               </div>
 
-              <div className="flex flex-wrap items-end gap-3">
+              <div className="grid w-full gap-3 md:w-auto md:grid-cols-2 xl:flex xl:flex-wrap xl:items-end">
                 <div className="space-y-1">
                   <label className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Service</label>
                   <select
                     value={filterTitle}
                     onChange={(e) => setFilterTitle(e.target.value)}
-                    className="flex h-10 rounded-xl border border-input bg-white/80 px-3 text-sm"
+                    className="flex h-10 w-full rounded-xl border border-input bg-white/80 px-3 text-sm md:min-w-[11rem]"
                   >
                     <option value="">All services</option>
                     {titles.map((title) => <option key={title} value={title}>{title}</option>)}
@@ -198,16 +198,16 @@ const AttendanceDashboard = () => {
                   <label className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Search</label>
                   <div className="relative">
                     <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Name or email" className="h-10 w-48 bg-white/80 pl-9" />
+                    <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Name or email" className="h-10 w-full bg-white/80 pl-9 md:min-w-[12rem]" />
                   </div>
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs uppercase tracking-[0.18em] text-muted-foreground">From</label>
-                  <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="h-10 w-36 bg-white/80" />
+                  <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="h-10 w-full bg-white/80 md:min-w-[9rem]" />
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs uppercase tracking-[0.18em] text-muted-foreground">To</label>
-                  <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="h-10 w-36 bg-white/80" />
+                  <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="h-10 w-full bg-white/80 md:min-w-[9rem]" />
                 </div>
                 <Button variant="outline" size="sm" onClick={() => void fetchData(true)} disabled={refreshing}>
                   {refreshing ? <LoadingSpinner size="sm" className="text-current" /> : <RefreshCcw className="h-4 w-4" />}
@@ -218,7 +218,7 @@ const AttendanceDashboard = () => {
             </div>
           </section>
 
-          <section className="grid gap-3 md:grid-cols-4">
+          <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
             {[
               { label: 'Total', value: summary.total },
               { label: 'Adult', value: summary.adult },
@@ -243,7 +243,7 @@ const AttendanceDashboard = () => {
                   <p className="mt-1">Records will appear here when members join the stream.</p>
                 </div>
               ) : (
-                <Table>
+                <Table className="min-w-[720px]">
                   <TableHeader>
                     <TableRow>
                       <TableHead>Name</TableHead>

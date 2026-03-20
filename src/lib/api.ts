@@ -60,8 +60,8 @@ export const api = {
   getActiveViewers: (branch_id?: string) =>
     call('active-viewers', branch_id ? { branch_id } : {}, 'GET', { credentials: 'omit' }),
 
-  getActiveViewerMembers: (branch_id: string) =>
-    call('active-viewers', { branch_id, include_members: 'true' }, 'GET', { credentials: 'omit' }),
+  getActiveViewerMembers: (branch_id?: string) =>
+    call('active-viewers', branch_id ? { branch_id, include_members: 'true' } : { include_members: 'true' }, 'GET', { credentials: 'omit' }),
 
   sendLeaveHeartbeat: (data: Record<string, unknown>) => {
     if (typeof navigator === 'undefined' || typeof navigator.sendBeacon !== 'function') return false;

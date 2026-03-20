@@ -442,7 +442,7 @@ const AdminDashboard = () => {
             </div>
           </section>
 
-          <div className="surface-panel grid gap-1 p-1 sm:grid-cols-4">
+          <div className="surface-panel grid gap-1 grid-cols-2 p-1 sm:grid-cols-4">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
@@ -579,10 +579,10 @@ const AdminDashboard = () => {
 
           {activeTab === 'attendance' && (
             <div className="space-y-4">
-              <section className="surface-panel flex flex-wrap items-end gap-3 p-5">
+              <section className="surface-panel grid gap-3 p-5 md:grid-cols-2 xl:flex xl:flex-wrap xl:items-end">
                 <div className="space-y-1">
                   <label className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Service</label>
-                  <select value={filterTitle} onChange={(e) => setFilterTitle(e.target.value)} className="flex h-10 rounded-xl border border-input bg-white/80 px-3 text-sm">
+                  <select value={filterTitle} onChange={(e) => setFilterTitle(e.target.value)} className="flex h-10 w-full rounded-xl border border-input bg-white/80 px-3 text-sm md:min-w-[11rem]">
                     <option value="">All services</option>
                     {titles.map((title) => <option key={title} value={title}>{title}</option>)}
                   </select>
@@ -591,16 +591,16 @@ const AdminDashboard = () => {
                   <label className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Search</label>
                   <div className="relative">
                     <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Name or email" className="h-10 w-48 bg-white/80 pl-9" />
+                    <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Name or email" className="h-10 w-full bg-white/80 pl-9 md:min-w-[12rem]" />
                   </div>
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs uppercase tracking-[0.18em] text-muted-foreground">From</label>
-                  <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="h-10 w-36 bg-white/80" />
+                  <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="h-10 w-full bg-white/80 md:min-w-[9rem]" />
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs uppercase tracking-[0.18em] text-muted-foreground">To</label>
-                  <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="h-10 w-36 bg-white/80" />
+                  <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="h-10 w-full bg-white/80 md:min-w-[9rem]" />
                 </div>
                 <Button variant="outline" size="sm" onClick={() => void fetchAll(true)} disabled={refreshing}>
                   {refreshing ? <LoadingSpinner size="sm" className="text-current" /> : <RefreshCcw className="h-4 w-4" />}
@@ -632,7 +632,7 @@ const AdminDashboard = () => {
                       <p className="mt-1">Attendance records will appear here after viewers join the stream.</p>
                     </div>
                   ) : (
-                    <Table>
+                    <Table className="min-w-[860px]">
                       <TableHeader>
                         <TableRow>
                           <TableHead>Name</TableHead>
@@ -729,7 +729,7 @@ const AdminDashboard = () => {
                   <CardTitle className="text-xl">Branches</CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
-                  <Table>
+                  <Table className="min-w-[560px]">
                     <TableHeader>
                       <TableRow>
                         <TableHead>Name</TableHead>
@@ -809,7 +809,7 @@ const AdminDashboard = () => {
                   <CardTitle className="text-xl">Staff Accounts</CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
-                  <Table>
+                  <Table className="min-w-[560px]">
                     <TableHeader>
                       <TableRow>
                         <TableHead>Branch</TableHead>

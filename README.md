@@ -1,32 +1,38 @@
-# DLBC Attendance
+# Deeper Life Bible Church Attendance Streaming Portal
+
+This repository contains the branded attendance streaming system for Deeper Life Bible Church.
+
+## Ownership And Usage
+
+This software is custom-branded for Deeper Life Bible Church and is not intended for public reuse, resale, redistribution, or white-label deployment by third parties without explicit permission from the project owner.
 
 ## Security Model
 
 This app uses a strict server-mediated access model:
 
 - The browser never queries database tables directly.
-- Privileged reads/writes happen only in Supabase Edge Functions using the service role key.
-- Admin/staff auth uses httpOnly cookies (`dlbc_session`). The frontend never reads auth tokens.
+- Privileged reads and writes happen only in Supabase Edge Functions using the service role key.
+- Admin and staff access is enforced through protected function endpoints and session validation.
 - Public endpoints are limited to minimal behavior:
-  - `attendance-heartbeat` for public attendance ingestion
-  - `active-viewers` for branch-safe viewer counts
-  - `public-branches` for the branch list (id + name only)
+  - `attendance-heartbeat` for attendance session sync
+  - `active-viewers` for viewer counts and active viewer lists
+  - `public-branches` for the public branch list
 
 ## Database Access Controls
 
-- RLS is enabled on all tables, and no public/anon policies are defined.
-- Direct grants for `anon` and `authenticated` roles are revoked on sensitive tables
-  (`attendance_records`, `attendance_staff`, `stream_settings`, `branches`).
-- All table access is performed through Edge Functions with the service role key.
+- RLS is enabled on all sensitive tables.
+- No public `anon` or unrestricted browser access is allowed on attendance, branch, staff, or stream settings tables.
+- Operational data is mediated by Edge Functions, not direct frontend table calls.
 
-## Frontend Data Safety
+## Frontend Scope
 
-- Frontend types only include safe, public data (`public-types.ts`).
-- Sensitive fields like `attendance_staff.password_hash` are never returned to the browser.
-- Attendance records are only exposed to authenticated admin/staff UIs via protected Edge Functions.
+- Stream viewers only see branch-scoped active viewers for their own branch.
+- Staff dashboards are branch-scoped.
+- Admin dashboards can view the full cross-branch workspace.
+- Realtime updates are used for active attendance, stream state, and viewer activity.
 
-## CORS Configuration
+## Deployment Notes
 
-Edge Functions validate the request origin when `credentials: "include"` is used.
-Set `ALLOWED_ORIGINS` (comma-separated) in Supabase Function env, e.g.
-`http://localhost:8080,https://your-domain.com`.
+- Supabase Edge Functions must be deployed for attendance, admin actions, active viewers, auth, and live-check automation.
+- `ALLOWED_ORIGINS` should be configured in Supabase function secrets for accepted frontend domains.
+- YouTube auto-detection depends on valid channel configuration and `YOUTUBE_API_KEY`.
