@@ -124,6 +124,7 @@ const Stream = () => {
   if (loading) return <PageLoader label="Preparing the live stream..." />;
 
   const videoId = youtubeUrl ? getVideoId(youtubeUrl) : null;
+  const attendeeLabel = session.family_surname || session.name || 'Family';
 
   return (
     <div className="page-shell min-h-screen px-4 py-4 md:px-6 md:py-6">
@@ -200,7 +201,7 @@ const Stream = () => {
               <h2 className="text-xl font-semibold text-foreground">Session Details</h2>
               <div className="mt-4 space-y-3 text-sm text-muted-foreground">
                 <p>
-                  Logged in as <span className="font-semibold text-foreground">{session.name}</span>
+                  Logged in as <span className="font-semibold text-foreground">{attendeeLabel}</span>
                 </p>
                 <p>{session.email}</p>
                 <p>Attendance type: <span className="font-semibold text-foreground">{session.attendance_type}</span></p>

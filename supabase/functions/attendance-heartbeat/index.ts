@@ -11,12 +11,16 @@ Deno.serve(async (req) => {
       family_adult_count, family_young_adult_count, family_youth_count, family_children_count } = body;
 
     // Validate required fields
-    if (!name || typeof name !== 'string' || name.length > 200) return err('Invalid name', req);
+    if (name && (typeof name !== 'string' || name.length > 200)) return err('Invalid name', req);
     if (!email || typeof email !== 'string' || email.length > 200) return err('Invalid email', req);
     if (!branch || typeof branch !== 'string') return err('Invalid branch', req);
     if (!branch_id || typeof branch_id !== 'string') return err('Invalid branch_id', req);
     if (!stream_session_id || typeof stream_session_id !== 'string') return err('Invalid stream_session_id', req);
     if (!stream_title || typeof stream_title !== 'string') return err('Invalid stream_title', req);
+    if (attendance_type === 'Single' && !name) return err('Invalid name', req);
+    if (attendance_type === 'Family' && (!family_surname || typeof family_surname !== 'string' || family_surname.length > 100)) {
+      return err('Invalid family_surname', req);
+    }
 
     const sb = getServiceClient();
     const now = new Date().toISOString();
@@ -52,7 +56,7 @@ Deno.serve(async (req) => {
       }, 200, req);
     } else {
       const { data, error } = await sb.from('attendance_records').insert({
-        name: name.trim(),
+        name: name?.trim() || null,
         email: email.trim().toLowerCase(),
         branch,
         branch_id,

@@ -16,7 +16,7 @@ import { api } from '@/lib/api';
 
 interface AttendanceRecord {
   id: string;
-  name: string;
+  name: string | null;
   email: string;
   branch: string;
   stream_title: string;
@@ -24,6 +24,7 @@ interface AttendanceRecord {
   timestamp: string;
   attendance_type: string;
   age_category: string | null;
+  family_surname: string | null;
   family_adult_count: number | null;
   family_young_adult_count: number | null;
   family_youth_count: number | null;
@@ -215,7 +216,7 @@ const AttendanceDashboard = () => {
                   <TableBody>
                     {records.map((record) => (
                       <TableRow key={record.id}>
-                        <TableCell className="font-medium">{record.name}</TableCell>
+                        <TableCell className="font-medium">{record.family_surname || record.name || 'Family'}</TableCell>
                         <TableCell className="text-muted-foreground">{record.email}</TableCell>
                         <TableCell>
                           <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${

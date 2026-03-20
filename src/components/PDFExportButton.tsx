@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
 interface Record {
-  name: string;
+  name: string | null;
   email: string;
   branch: string;
   attendance_type: string;
@@ -57,7 +57,7 @@ const PDFExportButton = ({ records, branchName, serviceTitle }: Props) => {
         startY: y,
         head: [['Name', 'Email', 'Branch', 'Type', 'Duration', 'Date']],
         body: records.map(r => [
-          r.name,
+          r.family_surname || r.name || 'Family',
           r.email,
           r.branch,
           r.attendance_type,

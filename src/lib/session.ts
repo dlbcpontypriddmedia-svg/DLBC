@@ -1,5 +1,5 @@
 export interface ViewerSession {
-  name: string;
+  name?: string;
   email: string;
   branch: string;
   branch_id: string;

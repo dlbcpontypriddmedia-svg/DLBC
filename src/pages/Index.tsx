@@ -27,12 +27,13 @@ const Index = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !email || !branchId || submitting) return;
+    if ((!name && type === 'Single') || !email || !branchId || submitting) return;
+    if (type === 'Family' && !familySurname.trim()) return;
     setSubmitting(true);
 
     const sessionId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const session: ViewerSession = {
-      name: name.trim(),
+      ...(type === 'Single' ? { name: name.trim() } : {}),
       email: email.trim().toLowerCase(),
       branch: branchName,
       branch_id: branchId,
@@ -55,8 +56,8 @@ const Index = () => {
 
   return (
     <div className="page-shell flex min-h-screen items-center justify-center px-4 py-10 md:px-6">
-      <div className="grid w-full max-w-6xl gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-        <section className="surface-panel flex flex-col justify-center p-8 md:p-10">
+      <div className="grid w-full max-w-6xl gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-stretch">
+        <section className="surface-panel flex flex-col justify-center p-8 md:p-10 lg:min-h-[760px]">
           <div className="space-y-6">
             <Logo className="justify-center md:justify-start" />
 
@@ -71,121 +72,130 @@ const Index = () => {
           </div>
         </section>
 
-        <section className="surface-panel p-6 md:p-8">
+        <section className="surface-panel flex flex-col p-6 md:p-8 lg:min-h-[760px]">
           <div className="mb-6 space-y-2 text-center">
             <h2 className="text-3xl font-semibold text-foreground">Join Live Service</h2>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="grid gap-2 rounded-2xl border border-primary/10 bg-muted/40 p-1 sm:grid-cols-2">
-              {(['Single', 'Family'] as const).map((option) => (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() => setType(option)}
-                  className={`rounded-[1rem] px-4 py-3 text-sm font-semibold transition-all ${
-                    type === option
-                      ? 'bg-primary text-primary-foreground shadow-sm'
-                      : 'text-muted-foreground hover:bg-white hover:text-foreground'
-                  }`}
-                >
-                  {option}
-                </button>
-              ))}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="name">{type === 'Family' ? 'Contact Name' : 'Full Name'}</Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                maxLength={200}
-                placeholder="Enter your name"
-                className="h-11 bg-white/80"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                maxLength={200}
-                placeholder="your@email.com"
-                className="h-11 bg-white/80"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Branch</Label>
-              <BranchSelector value={branchId} onChange={(id, nameValue) => { setBranchId(id); setBranchName(nameValue); }} />
-            </div>
-
-            {type === 'Single' && (
-              <div className="space-y-2">
-                <Label>Age Category</Label>
-                <select
-                  value={ageCategory}
-                  onChange={(e) => setAgeCategory(e.target.value)}
-                  className="flex h-11 w-full rounded-xl border border-input bg-white/80 px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  <option value="">Select age category...</option>
-                  <option value="Adult">Adult</option>
-                  <option value="Young Adult">Young Adult</option>
-                  <option value="Youth">Youth</option>
-                  <option value="Children">Children</option>
-                </select>
+          <div className="min-h-0 flex-1 lg:overflow-y-auto lg:pr-2">
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="grid gap-2 rounded-2xl border border-primary/10 bg-muted/40 p-1 sm:grid-cols-2">
+                {(['Single', 'Family'] as const).map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => setType(option)}
+                    className={`rounded-[1rem] px-4 py-3 text-sm font-semibold transition-all ${
+                      type === option
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'text-muted-foreground hover:bg-white hover:text-foreground'
+                    }`}
+                  >
+                    {option}
+                  </button>
+                ))}
               </div>
-            )}
 
-            {type === 'Family' && (
-              <div className="space-y-4 rounded-2xl border border-primary/10 bg-muted/35 p-4">
+              {type === 'Single' && (
                 <div className="space-y-2">
-                  <Label htmlFor="surname">Family Surname</Label>
+                  <Label htmlFor="name">Full Name</Label>
                   <Input
-                    id="surname"
-                    value={familySurname}
-                    onChange={(e) => setFamilySurname(e.target.value)}
-                    placeholder="Family surname"
-                    maxLength={100}
+                    id="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    maxLength={200}
+                    placeholder="Enter your name"
                     className="h-11 bg-white/80"
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  {[
-                    { label: 'Adults', val: adultCount, set: setAdultCount },
-                    { label: 'Young Adults', val: youngAdultCount, set: setYoungAdultCount },
-                    { label: 'Youth', val: youthCount, set: setYouthCount },
-                    { label: 'Children', val: childrenCount, set: setChildrenCount },
-                  ].map(({ label, val, set }) => (
-                    <div key={label} className="space-y-2">
-                      <Label className="text-xs uppercase tracking-[0.16em] text-muted-foreground">{label}</Label>
-                      <Input
-                        type="number"
-                        min={0}
-                        max={50}
-                        value={val}
-                        onChange={(e) => set(Number(e.target.value))}
-                        className="h-11 bg-white/80"
-                      />
-                    </div>
-                  ))}
-                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  maxLength={200}
+                  placeholder="your@email.com"
+                  className="h-11 bg-white/80"
+                />
               </div>
-            )}
 
-            <Button type="submit" className="h-12 w-full rounded-xl text-base" size="lg" disabled={!name || !email || !branchId || submitting}>
-              {submitting ? <LoadingSpinner size="sm" className="text-current" /> : <ArrowRight className="h-4 w-4" />}
-              {submitting ? 'Joining stream...' : 'Join Stream'}
-            </Button>
-          </form>
+              <div className="space-y-2">
+                <Label>Branch</Label>
+                <BranchSelector value={branchId} onChange={(id, nameValue) => { setBranchId(id); setBranchName(nameValue); }} />
+              </div>
 
-          <p className="mt-6 text-center text-xs uppercase tracking-[0.24em] text-muted-foreground">
+              {type === 'Single' && (
+                <div className="space-y-2">
+                  <Label>Age Category</Label>
+                  <select
+                    value={ageCategory}
+                    onChange={(e) => setAgeCategory(e.target.value)}
+                    className="flex h-11 w-full rounded-xl border border-input bg-white/80 px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <option value="">Select age category...</option>
+                    <option value="Adult">Adult</option>
+                    <option value="Young Adult">Young Adult</option>
+                    <option value="Youth">Youth</option>
+                    <option value="Children">Children</option>
+                  </select>
+                </div>
+              )}
+
+              {type === 'Family' && (
+                <div className="space-y-4 rounded-2xl border border-primary/10 bg-muted/35 p-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="surname">Family Surname</Label>
+                    <Input
+                      id="surname"
+                      value={familySurname}
+                      onChange={(e) => setFamilySurname(e.target.value)}
+                      placeholder="Family surname"
+                      maxLength={100}
+                      className="h-11 bg-white/80"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { label: 'Adults', val: adultCount, set: setAdultCount },
+                      { label: 'Young Adults', val: youngAdultCount, set: setYoungAdultCount },
+                      { label: 'Youth', val: youthCount, set: setYouthCount },
+                      { label: 'Children', val: childrenCount, set: setChildrenCount },
+                    ].map(({ label, val, set }) => (
+                      <div key={label} className="space-y-2">
+                        <Label className="text-xs uppercase tracking-[0.16em] text-muted-foreground">{label}</Label>
+                        <Input
+                          type="number"
+                          min={0}
+                          max={50}
+                          value={val}
+                          onChange={(e) => set(Number(e.target.value))}
+                          className="h-11 bg-white/80"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                className="h-12 w-full rounded-xl text-base"
+                size="lg"
+                disabled={(!name && type === 'Single') || (!familySurname.trim() && type === 'Family') || !email || !branchId || submitting}
+              >
+                {submitting ? <LoadingSpinner size="sm" className="text-current" /> : <ArrowRight className="h-4 w-4" />}
+                {submitting ? 'Joining stream...' : 'Join Stream'}
+              </Button>
+            </form>
+          </div>
+
+          <p className="mt-6 shrink-0 text-center text-xs uppercase tracking-[0.24em] text-muted-foreground">
             <a href="/attendance/login" className="transition-colors hover:text-foreground">Staff Login</a>
             {' · '}
             <a href="/admin/login" className="transition-colors hover:text-foreground">Admin Portal</a>

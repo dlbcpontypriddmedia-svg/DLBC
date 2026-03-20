@@ -35,13 +35,14 @@ interface AdminSettings {
 
 interface AttendanceRecord {
   id: string;
-  name: string;
+  name: string | null;
   email: string;
   branch: string;
   stream_title: string;
   duration_seconds: number;
   timestamp: string;
   attendance_type: string;
+  family_surname?: string | null;
 }
 
 interface StaffAccount {
@@ -480,7 +481,7 @@ const AdminDashboard = () => {
                       <TableBody>
                         {records.map((record) => (
                           <TableRow key={record.id}>
-                            <TableCell className="font-medium">{record.name}</TableCell>
+                            <TableCell className="font-medium">{record.family_surname || record.name || 'Family'}</TableCell>
                             <TableCell className="text-muted-foreground">{record.email}</TableCell>
                             <TableCell>{record.branch}</TableCell>
                             <TableCell>
