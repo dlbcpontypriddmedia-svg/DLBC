@@ -142,10 +142,12 @@ const AttendanceDashboard = () => {
             </span>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <ActiveViewersCount branchId={branchInfo.id} />
-            <Button variant="outline" size="sm" onClick={handleLogout} disabled={loggingOut}>
+            <ActiveViewersCount branchId={branchInfo.id} iconOnly />
+            <Button variant="outline" size="icon" onClick={() => void fetchData(true)} disabled={refreshing} aria-label="Refresh attendance data">
+              {refreshing ? <LoadingSpinner size="sm" className="text-current" /> : <RefreshCcw className="h-4 w-4" />}
+            </Button>
+            <Button variant="outline" size="icon" onClick={handleLogout} disabled={loggingOut} aria-label="Logout">
               {loggingOut ? <LoadingSpinner size="sm" className="text-current" /> : <LogOut className="h-4 w-4" />}
-              {loggingOut ? 'Logging out...' : 'Logout'}
             </Button>
           </div>
         </header>
