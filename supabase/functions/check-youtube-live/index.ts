@@ -1,8 +1,8 @@
-import { corsHeaders, corsResponse } from '../_shared/cors.ts';
+import { corsResponse, getCorsHeaders } from '../_shared/cors.ts';
 import { getServiceClient, SETTINGS_ID } from '../_shared/supabase.ts';
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return corsResponse();
+  if (req.method === 'OPTIONS') return corsResponse(req);
 
   const sb = getServiceClient();
   const youtubeApiKey = Deno.env.get('YOUTUBE_API_KEY');
@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
   const { data: settings } = await sb.from('stream_settings')
     .select('*').eq('id', SETTINGS_ID).single();
 
-  if (!settings) return json({ error: 'No settings found' }, 500);
+  if (!settings) return json({ error: 'No settings found' }, 500, req);
 
   const now = new Date();
 
@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
         attendance_auto_stop_at: null,
         updated_at: now.toISOString(),
       }).eq('id', SETTINGS_ID);
-      return json({ action: 'auto_stopped' });
+      return json({ action: 'auto_stopped' }, 200, req);
     }
   }
 
@@ -39,16 +39,16 @@ Deno.serve(async (req) => {
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const currentDay = days[now.getDay()];
     if (settings.check_day && settings.check_day !== currentDay) {
-      return json({ action: 'skipped', reason: 'wrong_day' });
+      return json({ action: 'skipped', reason: 'wrong_day' }, 200, req);
     }
 
     // Check time window
     const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
     if (settings.check_start_time && currentTime < settings.check_start_time) {
-      return json({ action: 'skipped', reason: 'before_start_time' });
+      return json({ action: 'skipped', reason: 'before_start_time' }, 200, req);
     }
     if (settings.check_end_time && currentTime > settings.check_end_time) {
-      return json({ action: 'skipped', reason: 'after_end_time' });
+      return json({ action: 'skipped', reason: 'after_end_time' }, 200, req);
     }
 
     // Check interval
@@ -56,13 +56,13 @@ Deno.serve(async (req) => {
       const lastCheck = new Date(settings.last_api_check_time);
       const minutesSince = (now.getTime() - lastCheck.getTime()) / 60000;
       if (minutesSince < (settings.check_interval_minutes || 5)) {
-        return json({ action: 'skipped', reason: 'interval_not_reached' });
+        return json({ action: 'skipped', reason: 'interval_not_reached' }, 200, req);
       }
     }
   }
 
   if (!youtubeApiKey || !settings.youtube_channel_id) {
-    return json({ action: 'skipped', reason: 'no_api_key_or_channel' });
+    return json({ action: 'skipped', reason: 'no_api_key_or_channel' }, 200, req);
   }
 
   // Update last check time
@@ -102,20 +102,20 @@ Deno.serve(async (req) => {
           updated_at: now.toISOString(),
         }).eq('id', SETTINGS_ID);
 
-        return json({ action: 'live_detected', videoId, title, url: liveUrl });
+        return json({ action: 'live_detected', videoId, title, url: liveUrl }, 200, req);
       }
 
-      return json({ action: 'already_tracking', videoId });
+      return json({ action: 'already_tracking', videoId }, 200, req);
     } else {
-      return json({ action: 'no_live_stream' });
+      return json({ action: 'no_live_stream' }, 200, req);
     }
   } catch (e) {
-    return json({ error: e.message, action: 'youtube_api_error' }, 500);
+    return json({ error: e.message, action: 'youtube_api_error' }, 500, req);
   }
 });
 
-function json(data: unknown, status = 200) {
+function json(data: unknown, status = 200, req: Request) {
   return new Response(JSON.stringify(data), {
-    status, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    status, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
   });
 }

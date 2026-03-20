@@ -51,6 +51,16 @@ export function getCookie(req: Request, name: string): string | null {
   return match ? match.split('=').slice(1).join('=') : null;
 }
 
+export function getBearerToken(req: Request): string | null {
+  const auth = req.headers.get('authorization') || req.headers.get('Authorization') || '';
+  if (!auth.startsWith('Bearer ')) return null;
+  return auth.slice('Bearer '.length).trim() || null;
+}
+
+export function getSessionToken(req: Request): string | null {
+  return getBearerToken(req) || getCookie(req, 'dlbc_session');
+}
+
 export function setAuthCookie(token: string): string {
   return `dlbc_session=${token}; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=86400`;
 }

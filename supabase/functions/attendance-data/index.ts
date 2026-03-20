@@ -1,16 +1,16 @@
-import { corsHeaders, corsResponse } from '../_shared/cors.ts';
-import { verifyJwt, getCookie } from '../_shared/auth.ts';
+import { corsResponse, getCorsHeaders } from '../_shared/cors.ts';
+import { verifyJwt, getSessionToken } from '../_shared/auth.ts';
 import { getServiceClient } from '../_shared/supabase.ts';
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return corsResponse();
+  if (req.method === 'OPTIONS') return corsResponse(req);
 
   const sessionSecret = Deno.env.get('SESSION_SECRET')!;
-  const token = getCookie(req, 'dlbc_session');
-  if (!token) return json({ error: 'Unauthorized' }, 401);
+  const token = getSessionToken(req);
+  if (!token) return json({ error: 'Unauthorized' }, 401, req);
 
   const payload = await verifyJwt(token, sessionSecret);
-  if (!payload) return json({ error: 'Unauthorized' }, 401);
+  if (!payload) return json({ error: 'Unauthorized' }, 401, req);
 
   const sb = getServiceClient();
   const url = new URL(req.url);
@@ -31,7 +31,7 @@ Deno.serve(async (req) => {
   query = query.order('timestamp', { ascending: false }).limit(1000);
 
   const { data, error } = await query;
-  if (error) return json({ error: error.message }, 500);
+  if (error) return json({ error: error.message }, 500, req);
 
   // Also get settings for context
   const { data: settings } = await sb.from('stream_settings')
@@ -42,11 +42,11 @@ Deno.serve(async (req) => {
   // Get distinct stream titles for filter dropdown
   const titles = [...new Set((data || []).map(r => r.stream_title))];
 
-  return json({ records: data, settings, titles, role: payload.role, branch_id: payload.branch_id });
+  return json({ records: data, settings, titles, role: payload.role, branch_id: payload.branch_id }, 200, req);
 });
 
-function json(data: unknown, status = 200) {
+function json(data: unknown, status = 200, req: Request) {
   return new Response(JSON.stringify(data), {
-    status, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    status, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
   });
 }

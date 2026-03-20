@@ -1,15 +1,15 @@
-import { corsHeaders, corsResponse } from '../_shared/cors.ts';
+import { corsResponse, getCorsHeaders } from '../_shared/cors.ts';
 import { signJwt, setAuthCookie } from '../_shared/auth.ts';
 import { getServiceClient } from '../_shared/supabase.ts';
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return corsResponse();
+  if (req.method === 'OPTIONS') return corsResponse(req);
 
   try {
     const { branch_id, password } = await req.json();
     if (!branch_id || !password) {
       return new Response(JSON.stringify({ error: 'Missing credentials' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
       });
     }
 
@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
 
     if (error || !staff) {
       return new Response(JSON.stringify({ error: 'Invalid credentials' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 401, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
       });
     }
 
@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
 
     if (hashHex !== staff.password_hash) {
       return new Response(JSON.stringify({ error: 'Invalid credentials' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 401, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
       });
     }
 
@@ -43,17 +43,17 @@ Deno.serve(async (req) => {
       exp: Math.floor(Date.now() / 1000) + 86400,
     }, sessionSecret);
 
-    return new Response(JSON.stringify({ success: true, branch_id: staff.branch_id }), {
+    return new Response(JSON.stringify({ success: true, branch_id: staff.branch_id, token }), {
       status: 200,
       headers: {
-        ...corsHeaders,
+        ...getCorsHeaders(req),
         'Content-Type': 'application/json',
         'Set-Cookie': setAuthCookie(token),
       },
     });
   } catch (e) {
     return new Response(JSON.stringify({ error: 'Server error' }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 500, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
     });
   }
 });

@@ -1,36 +1,38 @@
+@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 210 20% 98%;
-    --foreground: 220 20% 10%;
+    --background: 210 33% 98%;
+    --foreground: 216 38% 13%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 20% 10%;
+    --card-foreground: 216 38% 13%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 20% 10%;
+    --popover-foreground: 216 38% 13%;
 
-    --primary: 215 80% 28%;
+    --primary: 213 74% 28%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 38 80% 52%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 44 84% 56%;
+    --secondary-foreground: 216 38% 13%;
 
-    --muted: 210 15% 93%;
-    --muted-foreground: 215 12% 48%;
+    --muted: 210 35% 94%;
+    --muted-foreground: 215 18% 42%;
 
-    --accent: 38 80% 52%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 201 92% 92%;
+    --accent-foreground: 213 74% 24%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 214 20% 88%;
-    --input: 214 20% 88%;
-    --ring: 215 80% 28%;
+    --border: 213 28% 85%;
+    --input: 213 28% 85%;
+    --ring: 213 74% 28%;
 
     --radius: 0.625rem;
 
@@ -97,5 +99,87 @@
 
   body {
     @apply bg-background text-foreground antialiased;
+    font-family: "Source Sans 3", sans-serif;
+    background-image:
+      radial-gradient(circle at top, rgba(31, 92, 166, 0.14), transparent 32%),
+      radial-gradient(circle at bottom right, rgba(237, 191, 51, 0.12), transparent 24%),
+      linear-gradient(180deg, rgba(244, 248, 253, 0.95), rgba(248, 250, 252, 1));
+    background-attachment: fixed;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  .font-display {
+    font-family: "Cinzel", serif;
+  }
+}
+
+@layer components {
+  .page-shell {
+    @apply relative overflow-hidden bg-background;
+  }
+
+  .page-shell::before {
+    content: "";
+    @apply pointer-events-none absolute inset-0 opacity-70;
+    background:
+      radial-gradient(circle at 15% 10%, rgba(28, 84, 146, 0.16), transparent 20%),
+      radial-gradient(circle at 85% 20%, rgba(210, 168, 49, 0.14), transparent 18%);
+  }
+
+  .surface-panel {
+    @apply relative overflow-hidden rounded-[1.5rem] border border-white/70 bg-white/88 backdrop-blur;
+  }
+
+  .surface-panel::before {
+    content: "";
+    @apply pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent;
+  }
+
+  .brand-seal {
+    @apply relative flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-b from-white to-sky-50 shadow-[0_18px_30px_-18px_rgba(19,63,112,0.75)];
+  }
+
+  .brand-seal__ring {
+    @apply flex h-[3.6rem] w-[3.6rem] items-center justify-center rounded-full border border-primary/15 bg-[radial-gradient(circle_at_50%_20%,rgba(255,255,255,0.98),rgba(223,238,252,0.8)_55%,rgba(22,78,140,0.18)_100%)];
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.75);
+  }
+
+  .brand-seal__field {
+    @apply relative flex h-[3rem] w-[3rem] items-center justify-center overflow-hidden rounded-full bg-[radial-gradient(circle_at_50%_15%,#ffffff_0%,#d8ecff_36%,#1b73bd_82%,#0d2b54_100%)];
+  }
+
+  .brand-seal__cross {
+    @apply absolute rounded-full bg-white shadow-[0_6px_12px_-8px_rgba(0,0,0,0.45)];
+  }
+
+  .brand-seal__cross--vertical {
+    @apply h-[1.65rem] w-[0.48rem] -translate-y-[0.24rem];
+  }
+
+  .brand-seal__cross--horizontal {
+    @apply h-[0.48rem] w-[1.8rem] -translate-y-[0.24rem];
+  }
+
+  .brand-seal__glow {
+    @apply absolute bottom-[0.48rem] h-5 w-9 rounded-full bg-white/35 blur-md;
+  }
+
+  .brand-seal__book {
+    @apply absolute bottom-[0.2rem] flex items-end gap-[0.18rem];
+  }
+
+  .brand-seal__page {
+    @apply block h-[0.52rem] w-[1.05rem] rounded-t-full border-t border-primary/30 bg-white shadow-[0_-1px_0_rgba(255,255,255,0.9)];
+  }
+
+  .brand-seal__page--left {
+    transform: skewX(20deg);
+  }
+
+  .brand-seal__page--right {
+    transform: skewX(-20deg);
   }
 }

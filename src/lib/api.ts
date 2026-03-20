@@ -1,12 +1,23 @@
+import { clearAuthToken, getAuthToken, saveAuthToken } from './session';
+
 const PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID;
 const BASE = `https://${PROJECT_ID}.supabase.co/functions/v1`;
 
-async function call(fn: string, body?: unknown, method = 'POST') {
+async function call(
+  fn: string,
+  body?: unknown,
+  method = 'POST',
+  options?: { credentials?: RequestCredentials },
+) {
   const opts: RequestInit = {
     method,
     headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
+    credentials: options?.credentials ?? 'include',
   };
+  const token = getAuthToken();
+  if (token && opts.headers) {
+    (opts.headers as Record<string, string>).Authorization = `Bearer ${token}`;
+  }
   if (body && method !== 'GET') opts.body = JSON.stringify(body);
 
   const url = method === 'GET' && body
@@ -20,9 +31,23 @@ async function call(fn: string, body?: unknown, method = 'POST') {
 }
 
 export const api = {
-  adminAuth: (password: string) => call('admin-auth', { password }),
-  staffAuth: (branch_id: string, password: string) => call('staff-auth', { branch_id, password }),
-  logout: () => call('auth-logout'),
+  adminAuth: async (password: string) => {
+    const data = await call('admin-auth', { password });
+    if (data?.token) saveAuthToken(data.token);
+    return data;
+  },
+  staffAuth: async (branch_id: string, password: string) => {
+    const data = await call('staff-auth', { branch_id, password });
+    if (data?.token) saveAuthToken(data.token);
+    return data;
+  },
+  logout: async () => {
+    try {
+      return await call('auth-logout');
+    } finally {
+      clearAuthToken();
+    }
+  },
 
   adminAction: (action: string, params?: Record<string, unknown>) =>
     call('admin-actions', { action, ...params }),
@@ -33,7 +58,7 @@ export const api = {
     call('attendance-data', params, 'GET'),
 
   getActiveViewers: (branch_id?: string) =>
-    call('active-viewers', branch_id ? { branch_id } : {}, 'GET'),
+    call('active-viewers', branch_id ? { branch_id } : {}, 'GET', { credentials: 'omit' }),
 
-  getBranches: () => call('admin-actions', { action: 'get_branches' }),
+  getPublicBranches: () => call('public-branches', undefined, 'GET', { credentials: 'omit' }),
 };

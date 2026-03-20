@@ -21,5 +21,8 @@ verify_jwt = false
 [functions.active-viewers]
 verify_jwt = false
 
+[functions.public-branches]
+verify_jwt = false
+
 [functions.check-youtube-live]
 verify_jwt = false

@@ -14,6 +14,7 @@ export interface ViewerSession {
 }
 
 const SESSION_KEY = 'dlbc_viewer_session';
+const AUTH_TOKEN_KEY = 'dlbc_auth_token';
 
 export function saveViewerSession(session: ViewerSession) {
   localStorage.setItem(SESSION_KEY, JSON.stringify(session));
@@ -27,4 +28,16 @@ export function getViewerSession(): ViewerSession | null {
 
 export function clearViewerSession() {
   localStorage.removeItem(SESSION_KEY);
+}
+
+export function saveAuthToken(token: string) {
+  sessionStorage.setItem(AUTH_TOKEN_KEY, token);
+}
+
+export function getAuthToken(): string | null {
+  return sessionStorage.getItem(AUTH_TOKEN_KEY);
+}
+
+export function clearAuthToken() {
+  sessionStorage.removeItem(AUTH_TOKEN_KEY);
 }
