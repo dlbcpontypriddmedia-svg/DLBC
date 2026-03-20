@@ -14,7 +14,184 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      attendance_records: {
+        Row: {
+          age_category: string | null
+          attendance_type: string | null
+          branch: string
+          branch_id: string
+          duration_seconds: number | null
+          email: string
+          end_time: string | null
+          family_adult_count: number | null
+          family_children_count: number | null
+          family_surname: string | null
+          family_young_adult_count: number | null
+          family_youth_count: number | null
+          id: string
+          is_archived: boolean | null
+          last_seen_at: string
+          name: string
+          start_time: string
+          stream_session_id: string
+          stream_title: string
+          timestamp: string | null
+        }
+        Insert: {
+          age_category?: string | null
+          attendance_type?: string | null
+          branch: string
+          branch_id: string
+          duration_seconds?: number | null
+          email: string
+          end_time?: string | null
+          family_adult_count?: number | null
+          family_children_count?: number | null
+          family_surname?: string | null
+          family_young_adult_count?: number | null
+          family_youth_count?: number | null
+          id?: string
+          is_archived?: boolean | null
+          last_seen_at: string
+          name: string
+          start_time: string
+          stream_session_id: string
+          stream_title: string
+          timestamp?: string | null
+        }
+        Update: {
+          age_category?: string | null
+          attendance_type?: string | null
+          branch?: string
+          branch_id?: string
+          duration_seconds?: number | null
+          email?: string
+          end_time?: string | null
+          family_adult_count?: number | null
+          family_children_count?: number | null
+          family_surname?: string | null
+          family_young_adult_count?: number | null
+          family_youth_count?: number | null
+          id?: string
+          is_archived?: boolean | null
+          last_seen_at?: string
+          name?: string
+          start_time?: string
+          stream_session_id?: string
+          stream_title?: string
+          timestamp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_records_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      attendance_staff: {
+        Row: {
+          branch_id: string
+          created_at: string | null
+          id: string
+          password_hash: string
+        }
+        Insert: {
+          branch_id: string
+          created_at?: string | null
+          id?: string
+          password_hash: string
+        }
+        Update: {
+          branch_id?: string
+          created_at?: string | null
+          id?: string
+          password_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_staff_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      branches: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      stream_settings: {
+        Row: {
+          attendance_auto_stop_at: string | null
+          auto_attendance_duration_hours: number | null
+          auto_detected_url: string | null
+          check_day: string | null
+          check_end_time: string | null
+          check_interval_minutes: number | null
+          check_start_time: string | null
+          id: string
+          is_attendance_active: boolean | null
+          last_api_check_time: string | null
+          last_live_check_date: string | null
+          stream_title: string | null
+          updated_at: string | null
+          youtube_channel_id: string | null
+          youtube_url: string | null
+        }
+        Insert: {
+          attendance_auto_stop_at?: string | null
+          auto_attendance_duration_hours?: number | null
+          auto_detected_url?: string | null
+          check_day?: string | null
+          check_end_time?: string | null
+          check_interval_minutes?: number | null
+          check_start_time?: string | null
+          id?: string
+          is_attendance_active?: boolean | null
+          last_api_check_time?: string | null
+          last_live_check_date?: string | null
+          stream_title?: string | null
+          updated_at?: string | null
+          youtube_channel_id?: string | null
+          youtube_url?: string | null
+        }
+        Update: {
+          attendance_auto_stop_at?: string | null
+          auto_attendance_duration_hours?: number | null
+          auto_detected_url?: string | null
+          check_day?: string | null
+          check_end_time?: string | null
+          check_interval_minutes?: number | null
+          check_start_time?: string | null
+          id?: string
+          is_attendance_active?: boolean | null
+          last_api_check_time?: string | null
+          last_live_check_date?: string | null
+          stream_title?: string | null
+          updated_at?: string | null
+          youtube_channel_id?: string | null
+          youtube_url?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
