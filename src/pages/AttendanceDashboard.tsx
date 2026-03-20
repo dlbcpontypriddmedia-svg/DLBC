@@ -101,20 +101,32 @@ const AttendanceDashboard = () => {
   };
 
   const summary = {
-    total: records.length,
-    families: records.filter((r) => r.attendance_type === 'Family').length,
-    youth: records.filter((r) => r.age_category === 'Youth').length,
-    familyMembers: records
-      .filter((r) => r.attendance_type === 'Family')
-      .reduce(
-        (sum, r) =>
-          sum +
-          (r.family_adult_count || 0) +
-          (r.family_young_adult_count || 0) +
-          (r.family_youth_count || 0) +
-          (r.family_children_count || 0),
-        0,
-      ),
+    total: records.reduce((sum, record) => {
+      if (record.attendance_type === 'Family') {
+        return sum
+          + (record.family_adult_count || 0)
+          + (record.family_young_adult_count || 0)
+          + (record.family_youth_count || 0)
+          + (record.family_children_count || 0);
+      }
+      return sum + 1;
+    }, 0),
+    adult: records.reduce((sum, record) => {
+      if (record.attendance_type === 'Family') return sum + (record.family_adult_count || 0);
+      return sum + (record.age_category === 'Adult' ? 1 : 0);
+    }, 0),
+    youngAdult: records.reduce((sum, record) => {
+      if (record.attendance_type === 'Family') return sum + (record.family_young_adult_count || 0);
+      return sum + (record.age_category === 'Young Adult' ? 1 : 0);
+    }, 0),
+    youth: records.reduce((sum, record) => {
+      if (record.attendance_type === 'Family') return sum + (record.family_youth_count || 0);
+      return sum + (record.age_category === 'Youth' ? 1 : 0);
+    }, 0),
+    children: records.reduce((sum, record) => {
+      if (record.attendance_type === 'Family') return sum + (record.family_children_count || 0);
+      return sum + (record.age_category === 'Children' ? 1 : 0);
+    }, 0),
   };
 
   if (loading) return <PageLoader label="Loading attendance dashboard..." />;
@@ -180,10 +192,11 @@ const AttendanceDashboard = () => {
 
           <section className="grid gap-3 md:grid-cols-4">
             {[
-              { label: 'Total Records', value: summary.total },
-              { label: 'Families', value: summary.families },
+              { label: 'Total', value: summary.total },
+              { label: 'Adult', value: summary.adult },
+              { label: 'Young Adult', value: summary.youngAdult },
               { label: 'Youth', value: summary.youth },
-              { label: 'Family Members', value: summary.familyMembers },
+              { label: 'Children', value: summary.children },
             ].map(({ label, value }) => (
               <Card key={label} className="surface-panel border-none shadow-none">
                 <CardContent className="p-5">

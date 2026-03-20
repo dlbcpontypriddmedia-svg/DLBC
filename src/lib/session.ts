@@ -42,12 +42,14 @@ export function clearViewerSession() {
 
 export function saveAuthToken(token: string) {
   sessionStorage.setItem(AUTH_TOKEN_KEY, token);
+  localStorage.setItem(AUTH_TOKEN_KEY, token);
 }
 
 export function getAuthToken(): string | null {
-  return sessionStorage.getItem(AUTH_TOKEN_KEY);
+  return sessionStorage.getItem(AUTH_TOKEN_KEY) || localStorage.getItem(AUTH_TOKEN_KEY);
 }
 
 export function clearAuthToken() {
   sessionStorage.removeItem(AUTH_TOKEN_KEY);
+  localStorage.removeItem(AUTH_TOKEN_KEY);
 }
