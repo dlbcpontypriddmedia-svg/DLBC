@@ -154,9 +154,6 @@ const Stream = () => {
                   </span>
                 </div>
                 <h1 className="text-3xl font-semibold leading-tight text-foreground">{streamTitle}</h1>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Your attendance is updated automatically while this stream page remains open.
-                </p>
               </div>
 
               <div className="flex items-center gap-3">
@@ -208,15 +205,6 @@ const Stream = () => {
                 <p>{session.email}</p>
                 <p>Attendance type: <span className="font-semibold text-foreground">{session.attendance_type}</span></p>
               </div>
-            </section>
-
-            <section className="surface-panel p-5">
-              <h2 className="text-xl font-semibold text-foreground">How It Works</h2>
-              <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
-                <li>Stay on this page during the live service for the most accurate attendance duration.</li>
-                <li>Branch activity updates automatically in the header viewer counter.</li>
-                <li>If the stream is not live yet, the player will appear once the admin enables it or YouTube auto-detection finds it.</li>
-              </ul>
             </section>
           </aside>
         </main>

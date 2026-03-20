@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Church, ShieldCheck, Users } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 import BranchSelector from '@/components/BranchSelector';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import Logo from '@/components/Logo';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { saveViewerSession, ViewerSession } from '@/lib/session';
@@ -57,66 +56,24 @@ const Index = () => {
   return (
     <div className="page-shell flex min-h-screen items-center justify-center px-4 py-10 md:px-6">
       <div className="grid w-full max-w-6xl gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-        <section className="surface-panel flex flex-col justify-between p-8 md:p-10">
-          <div className="space-y-8">
+        <section className="surface-panel flex flex-col justify-center p-8 md:p-10">
+          <div className="space-y-6">
             <Logo className="justify-center md:justify-start" />
 
             <div className="space-y-4 text-center md:text-left">
-              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-primary/75">
-                Worship Attendance Portal
-              </p>
               <h1 className="max-w-xl text-4xl font-semibold leading-tight text-foreground md:text-5xl">
-                Join the live service with a calmer, verified attendance flow.
+                Join Live Service
               </h1>
               <p className="max-w-xl text-lg text-muted-foreground">
-                Select your branch, identify your household, and proceed into the live stream with attendance captured automatically.
+                Fill in your details to continue.
               </p>
             </div>
-
-            <div className="grid gap-3 md:grid-cols-3">
-              {[
-                {
-                  icon: Church,
-                  title: 'Church-wide access',
-                  text: 'Branch selection is served from the protected Supabase backend.',
-                },
-                {
-                  icon: Users,
-                  title: 'Family-ready records',
-                  text: 'Singles and households are captured with the right attendance fields.',
-                },
-                {
-                  icon: ShieldCheck,
-                  title: 'Secure workflow',
-                  text: 'Admin and staff functions remain separated from public stream access.',
-                },
-              ].map(({ icon: Icon, title, text }) => (
-                <Card key={title} className="border-primary/10 bg-white/72 shadow-none">
-                  <CardContent className="space-y-3 p-5">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <div className="space-y-1">
-                      <h2 className="font-display text-base font-semibold text-foreground">{title}</h2>
-                      <p className="text-sm text-muted-foreground">{text}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-
-          <div className="mt-8 rounded-2xl border border-primary/10 bg-primary/[0.03] px-5 py-4 text-sm text-muted-foreground">
-            Attendance runs in the background while you remain on the stream page. Keep the tab open during service for accurate duration capture.
           </div>
         </section>
 
         <section className="surface-panel p-6 md:p-8">
           <div className="mb-6 space-y-2 text-center">
             <h2 className="text-3xl font-semibold text-foreground">Join Live Service</h2>
-            <p className="text-sm text-muted-foreground">
-              Enter your attendance details below to continue into the stream.
-            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
