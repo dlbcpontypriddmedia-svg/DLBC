@@ -143,6 +143,7 @@ const AttendanceDashboard = () => {
               <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="h-9 w-36" />
             </div>
             <Button variant="outline" size="sm" onClick={fetchData}>Refresh</Button>
+            <PDFExportButton records={records} branchName={branchInfo.name} serviceTitle={filterTitle || undefined} />
           </div>
 
           {/* Table */}
