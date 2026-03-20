@@ -1,6 +1,4 @@
 import { useState } from 'react';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { Button } from '@/components/ui/button';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
@@ -29,9 +27,13 @@ interface Props {
 const PDFExportButton = ({ records, branchName, serviceTitle }: Props) => {
   const [exporting, setExporting] = useState(false);
 
-  const exportPDF = () => {
+  const exportPDF = async () => {
     setExporting(true);
     try {
+      const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+        import('jspdf'),
+        import('jspdf-autotable'),
+      ]);
       const doc = new jsPDF();
 
       doc.setFontSize(16);
