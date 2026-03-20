@@ -4,6 +4,7 @@ export interface ViewerSession {
   branch: string;
   branch_id: string;
   stream_session_id: string;
+  stream_started_at?: number;
   attendance_type: 'Single' | 'Family';
   age_category?: string;
   family_surname?: string;
@@ -24,6 +25,15 @@ export function getViewerSession(): ViewerSession | null {
   const raw = localStorage.getItem(SESSION_KEY);
   if (!raw) return null;
   try { return JSON.parse(raw); } catch { return null; }
+}
+
+export function updateViewerSession(patch: Partial<ViewerSession>) {
+  const current = getViewerSession();
+  if (!current) return null;
+
+  const next = { ...current, ...patch };
+  saveViewerSession(next);
+  return next;
 }
 
 export function clearViewerSession() {

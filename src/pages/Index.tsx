@@ -38,6 +38,7 @@ const Index = () => {
       branch: branchName,
       branch_id: branchId,
       stream_session_id: sessionId,
+      stream_started_at: Date.now(),
       attendance_type: type,
       ...(type === 'Single'
         ? { age_category: ageCategory }
