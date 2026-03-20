@@ -22,7 +22,6 @@ export function useRealtimeRefresh({
 }: UseRealtimeRefreshOptions) {
   const refreshRef = useRef(onRefresh);
   const timeoutRef = useRef<number | null>(null);
-  const subscriptionKey = JSON.stringify(subscriptions);
 
   useEffect(() => {
     refreshRef.current = onRefresh;
@@ -63,5 +62,5 @@ export function useRealtimeRefresh({
         void supabase.removeChannel(channel);
       }
     };
-  }, [delayMs, enabled, subscriptionKey]);
+  }, [delayMs, enabled, subscriptions]);
 }

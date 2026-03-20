@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { RadioTower, Volume2, VolumeX, Pause, Play, MonitorPlay, LogOut, Clock3, UserRound, Users, Baby, User, Maximize } from 'lucide-react';
 import { toast } from 'sonner';
@@ -68,6 +68,7 @@ const Stream = () => {
   const [isMuted, setIsMuted] = useState(false);
   const [duplicateSessionNotice, setDuplicateSessionNotice] = useState(false);
   const videoId = youtubeUrl ? getVideoId(youtubeUrl) : null;
+  const realtimeSubscriptions = useMemo(() => [{ topic: 'stream:global', events: ['stream_updated'] }], []);
 
   useStreamPresenceNotifications({
     branchId: session?.branch_id,
@@ -148,7 +149,7 @@ const Stream = () => {
   }, [session, streamTitle]);
 
   useRealtimeRefresh({
-    subscriptions: [{ topic: 'stream:global', events: ['stream_updated'] }],
+    subscriptions: realtimeSubscriptions,
     onRefresh: () => {
       if (session) {
         void sendHeartbeat();

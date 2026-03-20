@@ -55,6 +55,15 @@ const AttendanceDashboard = () => {
     }
   }, []);
 
+  const realtimeSubscriptions = useMemo(() => (
+    branchInfo.id
+      ? [
+          { topic: `branch:${branchInfo.id}`, events: ['viewer_joined', 'viewer_left'] },
+          { topic: 'stream:global', events: ['stream_updated'] },
+        ]
+      : [{ topic: 'stream:global', events: ['stream_updated'] }]
+  ), [branchInfo.id]);
+
   const fetchData = useCallback(async (showRefresh = false) => {
     if (showRefresh) setRefreshing(true);
 
@@ -86,12 +95,7 @@ const AttendanceDashboard = () => {
   }, [fetchData]);
 
   useRealtimeRefresh({
-    subscriptions: branchInfo.id
-      ? [
-          { topic: `branch:${branchInfo.id}`, events: ['viewer_joined', 'viewer_left'] },
-          { topic: 'stream:global', events: ['stream_updated'] },
-        ]
-      : [{ topic: 'stream:global', events: ['stream_updated'] }],
+    subscriptions: realtimeSubscriptions,
     onRefresh: () => {
       void fetchData();
     },

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { Users } from 'lucide-react';
 import { api } from '@/lib/api';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -8,6 +8,11 @@ const ActiveViewersCount = ({ branchId, compact = false, iconOnly = false }: { b
   const [count, setCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const intervalRef = useRef<ReturnType<typeof setInterval>>();
+  const subscriptions = useMemo(() => (
+    branchId
+      ? [{ topic: `branch:${branchId}`, events: ['viewer_joined', 'viewer_left'] }]
+      : [{ topic: 'admin:attendance', events: ['attendance_changed'] }]
+  ), [branchId]);
 
   const fetchCount = useCallback(() => {
     api.getActiveViewers(branchId)
@@ -17,9 +22,7 @@ const ActiveViewersCount = ({ branchId, compact = false, iconOnly = false }: { b
   }, [branchId]);
 
   useRealtimeRefresh({
-    subscriptions: branchId
-      ? [{ topic: `branch:${branchId}`, events: ['viewer_joined', 'viewer_left'] }]
-      : [{ topic: 'admin:attendance', events: ['attendance_changed'] }],
+    subscriptions,
     onRefresh: fetchCount,
   });
 

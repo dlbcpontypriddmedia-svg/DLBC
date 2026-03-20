@@ -101,6 +101,11 @@ const AdminDashboard = () => {
   const [newStaffPassword, setNewStaffPassword] = useState('');
   const [pendingConfirm, setPendingConfirm] = useState<PendingConfirm>(null);
   const [mergingBranch, setMergingBranch] = useState(false);
+  const realtimeSubscriptions = useMemo(() => [
+    { topic: 'admin:attendance', events: ['attendance_changed'] },
+    { topic: 'admin:workspace', events: ['workspace_updated'] },
+    { topic: 'stream:global', events: ['stream_updated'] },
+  ], []);
 
   const fetchAll = useCallback(async (showRefresh = false) => {
     if (showRefresh) setRefreshing(true);
@@ -150,11 +155,7 @@ const AdminDashboard = () => {
   }, [fetchAll]);
 
   useRealtimeRefresh({
-    subscriptions: [
-      { topic: 'admin:attendance', events: ['attendance_changed'] },
-      { topic: 'admin:workspace', events: ['workspace_updated'] },
-      { topic: 'stream:global', events: ['stream_updated'] },
-    ],
+    subscriptions: realtimeSubscriptions,
     onRefresh: () => {
       void fetchAll();
     },
