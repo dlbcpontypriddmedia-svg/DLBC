@@ -65,6 +65,18 @@ Deno.serve(async (req) => {
         return json({ branch: data }, 200, req);
       }
       case 'delete_branch': {
+        const { count: recordCount, error: recordError } = await sb
+          .from('attendance_records')
+          .select('id', { count: 'exact', head: true })
+          .eq('branch_id', params.id);
+
+        if (recordError) return json({ error: recordError.message }, 400, req);
+        if ((recordCount || 0) > 0) {
+          return json({
+            error: 'This branch cannot be deleted because it already has attendance records. Delete the history first or keep the branch for reporting.',
+          }, 400, req);
+        }
+
         const { error } = await sb.from('branches').delete().eq('id', params.id);
         if (error) return json({ error: error.message }, 400, req);
         return json({ success: true }, 200, req);

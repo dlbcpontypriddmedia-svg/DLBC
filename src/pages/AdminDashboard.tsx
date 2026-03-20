@@ -4,6 +4,7 @@ import { CalendarDays, LogOut, Plus, RadioTower, RefreshCcw, Save, ShieldCheck, 
 import { toast } from 'sonner';
 
 import ActiveViewersCount from '@/components/ActiveViewersCount';
+import ConfirmDialog from '@/components/ConfirmDialog';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import Logo from '@/components/Logo';
 import PageLoader from '@/components/PageLoader';
@@ -52,6 +53,10 @@ interface StaffAccount {
 }
 
 type TabId = 'stream' | 'attendance' | 'branches' | 'staff';
+type PendingConfirm =
+  | { type: 'delete-branch'; id: string; title: string; description: string }
+  | { type: 'delete-staff'; id: string; title: string; description: string }
+  | null;
 
 const getErrorMessage = (error: unknown, fallback: string) =>
   error instanceof Error ? error.message : fallback;
@@ -87,6 +92,7 @@ const AdminDashboard = () => {
   const [manualUrl, setManualUrl] = useState('');
   const [newStaffBranch, setNewStaffBranch] = useState('');
   const [newStaffPassword, setNewStaffPassword] = useState('');
+  const [pendingConfirm, setPendingConfirm] = useState<PendingConfirm>(null);
 
   const fetchAll = useCallback(async (showRefresh = false) => {
     if (showRefresh) setRefreshing(true);
@@ -229,7 +235,6 @@ const AdminDashboard = () => {
   };
 
   const deleteBranch = async (id: string) => {
-    if (!confirm('Delete this branch?')) return;
     setDeletingBranchId(id);
     try {
       await api.adminAction('delete_branch', { id });
@@ -258,7 +263,6 @@ const AdminDashboard = () => {
   };
 
   const deleteStaff = async (id: string) => {
-    if (!confirm('Delete this staff account?')) return;
     setDeletingStaffId(id);
     try {
       await api.adminAction('delete_staff', { id });
@@ -287,11 +291,36 @@ const AdminDashboard = () => {
   const latestRecordDate = records[0]?.timestamp ? new Date(records[0].timestamp).toLocaleString() : 'No records yet';
   const branchCount = branches.length;
   const staffCount = staffList.length;
+  const confirmLoading = pendingConfirm?.type === 'delete-branch'
+    ? Boolean(pendingConfirm.id && deletingBranchId === pendingConfirm.id)
+    : pendingConfirm?.type === 'delete-staff'
+      ? Boolean(pendingConfirm.id && deletingStaffId === pendingConfirm.id)
+      : false;
 
   if (loading) return <PageLoader label="Loading admin workspace..." />;
 
   return (
     <div className="page-shell min-h-screen px-4 py-4 md:px-6 md:py-6">
+      <ConfirmDialog
+        open={Boolean(pendingConfirm)}
+        onOpenChange={(open) => {
+          if (!open && !confirmLoading) setPendingConfirm(null);
+        }}
+        title={pendingConfirm?.title || 'Confirm action'}
+        description={pendingConfirm?.description}
+        confirmLabel={pendingConfirm?.type === 'delete-staff' ? 'Delete Staff' : 'Delete Branch'}
+        destructive
+        loading={confirmLoading}
+        onConfirm={() => {
+          if (!pendingConfirm) return;
+          if (pendingConfirm.type === 'delete-branch') {
+            void deleteBranch(pendingConfirm.id).finally(() => setPendingConfirm(null));
+            return;
+          }
+          void deleteStaff(pendingConfirm.id).finally(() => setPendingConfirm(null));
+        }}
+      />
+
       <div className="mx-auto flex min-h-[calc(100vh-2rem)] max-w-7xl flex-col gap-4">
         <header className="surface-panel flex flex-col gap-4 px-5 py-4 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-wrap items-center gap-4">
@@ -621,7 +650,18 @@ const AdminDashboard = () => {
                         <TableRow key={branch.id}>
                           <TableCell className="font-medium">{branch.name}</TableCell>
                           <TableCell>
-                            <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => void deleteBranch(branch.id)} disabled={deletingBranchId === branch.id}>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-destructive hover:text-destructive"
+                              onClick={() => setPendingConfirm({
+                                type: 'delete-branch',
+                                id: branch.id,
+                                title: 'Delete branch?',
+                                description: `This will remove ${branch.name} from the branch list.`,
+                              })}
+                              disabled={deletingBranchId === branch.id}
+                            >
                               {deletingBranchId === branch.id ? <LoadingSpinner size="sm" className="text-current" /> : <Trash2 className="h-4 w-4" />}
                               {deletingBranchId === branch.id ? 'Deleting...' : 'Delete'}
                             </Button>
@@ -684,7 +724,18 @@ const AdminDashboard = () => {
                           <TableCell className="font-medium">{branches.find((branch) => branch.id === staff.branch_id)?.name || staff.branch_id}</TableCell>
                           <TableCell className="tabular-nums text-muted-foreground">{new Date(staff.created_at).toLocaleDateString()}</TableCell>
                           <TableCell>
-                            <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => void deleteStaff(staff.id)} disabled={deletingStaffId === staff.id}>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-destructive hover:text-destructive"
+                              onClick={() => setPendingConfirm({
+                                type: 'delete-staff',
+                                id: staff.id,
+                                title: 'Delete staff account?',
+                                description: 'This will remove the selected staff account from the admin workspace.',
+                              })}
+                              disabled={deletingStaffId === staff.id}
+                            >
                               {deletingStaffId === staff.id ? <LoadingSpinner size="sm" className="text-current" /> : <Trash2 className="h-4 w-4" />}
                               {deletingStaffId === staff.id ? 'Deleting...' : 'Delete'}
                             </Button>
