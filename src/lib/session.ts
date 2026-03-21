@@ -18,13 +18,27 @@ const SESSION_KEY = 'dlbc_viewer_session';
 const AUTH_TOKEN_KEY = 'dlbc_auth_token';
 
 export function saveViewerSession(session: ViewerSession) {
-  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
 }
 
 export function getViewerSession(): ViewerSession | null {
-  const raw = localStorage.getItem(SESSION_KEY);
-  if (!raw) return null;
-  try { return JSON.parse(raw); } catch { return null; }
+  const raw = sessionStorage.getItem(SESSION_KEY);
+  if (raw) {
+    try { return JSON.parse(raw); } catch { return null; }
+  }
+
+  // Migrate older browser-wide sessions into the current tab once, then remove them.
+  const legacyRaw = localStorage.getItem(SESSION_KEY);
+  if (!legacyRaw) return null;
+  try {
+    const parsed = JSON.parse(legacyRaw);
+    sessionStorage.setItem(SESSION_KEY, legacyRaw);
+    localStorage.removeItem(SESSION_KEY);
+    return parsed;
+  } catch {
+    localStorage.removeItem(SESSION_KEY);
+    return null;
+  }
 }
 
 export function updateViewerSession(patch: Partial<ViewerSession>) {
@@ -37,6 +51,7 @@ export function updateViewerSession(patch: Partial<ViewerSession>) {
 }
 
 export function clearViewerSession() {
+  sessionStorage.removeItem(SESSION_KEY);
   localStorage.removeItem(SESSION_KEY);
 }
 

@@ -49,10 +49,16 @@ type YouTubePlayer = {
 };
 
 const AUDIO_STREAM_URL = 'https://airtime.dclm.org/radio/8000/live';
+type StreamMode = 'audio' | 'video';
+
+function getStreamModeKey(streamSessionId?: string) {
+  return streamSessionId ? `dlbc_stream_mode:${streamSessionId}` : null;
+}
 
 const Stream = () => {
   const navigate = useNavigate();
   const [session, setSession] = useState(() => getViewerSession());
+  const modeStorageKey = getStreamModeKey(session?.stream_session_id);
   const persistedStartTime = session?.stream_started_at ?? Date.now();
   const heartbeatRef = useRef<ReturnType<typeof setInterval>>();
   const startTime = useRef(persistedStartTime);
@@ -61,7 +67,11 @@ const Stream = () => {
   const playerRef = useRef<YouTubePlayer | null>(null);
   const videoShellRef = useRef<HTMLDivElement | null>(null);
   const [elapsed, setElapsed] = useState(0);
-  const [audioOnly, setAudioOnly] = useState(false);
+  const [audioOnly, setAudioOnly] = useState(() => modeStorageKey ? localStorage.getItem(modeStorageKey) === 'audio' : false);
+  const [modeSelected, setModeSelected] = useState<boolean>(() => {
+    const stored = modeStorageKey ? localStorage.getItem(modeStorageKey) : null;
+    return stored === 'audio' || stored === 'video';
+  });
   const [streamTitle, setStreamTitle] = useState('Live Service');
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [streamActive, setStreamActive] = useState(false);
@@ -83,6 +93,24 @@ const Stream = () => {
       navigate('/');
     }
   }, [navigate, session]);
+
+  useEffect(() => {
+    if (!modeSelected) return;
+    if (!modeStorageKey) return;
+    localStorage.setItem(modeStorageKey, audioOnly ? 'audio' : 'video');
+  }, [audioOnly, modeSelected, modeStorageKey]);
+
+  useEffect(() => {
+    if (!modeStorageKey) {
+      setAudioOnly(false);
+      setModeSelected(false);
+      return;
+    }
+
+    const stored = localStorage.getItem(modeStorageKey);
+    setAudioOnly(stored === 'audio');
+    setModeSelected(stored === 'audio' || stored === 'video');
+  }, [modeStorageKey]);
 
   useEffect(() => {
     if (!session?.stream_started_at) {
@@ -245,6 +273,14 @@ const Stream = () => {
     navigate('/');
   };
 
+  const handleSelectMode = (mode: StreamMode) => {
+    setAudioOnly(mode === 'audio');
+    setModeSelected(true);
+    if (modeStorageKey) {
+      localStorage.setItem(modeStorageKey, mode);
+    }
+  };
+
   const formatTime = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
@@ -404,6 +440,60 @@ const Stream = () => {
 
   if (!session) return null;
   if (loading) return <PageLoader label="Preparing the live stream..." />;
+  if (!modeSelected) {
+    return (
+      <div className="page-shell min-h-screen px-4 py-4 md:px-6 md:py-6">
+        <div className="mx-auto flex max-w-4xl flex-col gap-4">
+          <header className="surface-panel flex flex-col gap-4 px-5 py-4 md:flex-row md:items-center md:justify-between">
+            <Logo />
+            <div className="rounded-full border border-primary/10 bg-primary/[0.03] px-3 py-1.5 text-sm font-medium text-foreground">
+              {session.branch} Branch
+            </div>
+          </header>
+
+          <main className="surface-panel px-6 py-8 sm:px-8 sm:py-10">
+            <div className="mx-auto max-w-2xl text-center">
+              <p className="text-sm font-semibold uppercase tracking-[0.28em] text-primary/75">Choose Mode</p>
+              <h1 className="mt-3 text-3xl font-semibold text-foreground sm:text-4xl">How do you want to join?</h1>
+              <p className="mt-3 text-sm text-muted-foreground sm:text-base">
+                Select your preferred mode now. You can still change it later from the stream controls.
+              </p>
+            </div>
+
+            <div className="mx-auto mt-8 grid max-w-3xl gap-4 md:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => handleSelectMode('video')}
+                className="rounded-[1.5rem] border border-primary/10 bg-white/80 p-6 text-left shadow-sm transition hover:border-primary/20 hover:bg-white"
+              >
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/10 bg-primary/10">
+                  <MonitorPlay className="h-6 w-6 text-primary" />
+                </div>
+                <h2 className="mt-5 text-xl font-semibold text-foreground">Video Mode</h2>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Watch the live service with the current YouTube player experience.
+                </p>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleSelectMode('audio')}
+                className="rounded-[1.5rem] border border-primary/10 bg-white/80 p-6 text-left shadow-sm transition hover:border-primary/20 hover:bg-white"
+              >
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/10 bg-primary/10">
+                  <Volume2 className="h-6 w-6 text-primary" />
+                </div>
+                <h2 className="mt-5 text-xl font-semibold text-foreground">Audio Mode</h2>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Listen through the direct church audio stream without the YouTube player.
+                </p>
+              </button>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
 
   const attendeeLabel = session.attendance_type === 'Family'
     ? formatFamilyName(session.family_surname) || 'Family'
@@ -531,7 +621,20 @@ const Stream = () => {
                   <Maximize className="h-4 w-4" />
                   Fullscreen
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => setAudioOnly((value) => !value)}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setAudioOnly((value) => {
+                      const next = !value;
+                      if (modeStorageKey) {
+                        localStorage.setItem(modeStorageKey, next ? 'audio' : 'video');
+                      }
+                      return next;
+                    });
+                    setModeSelected(true);
+                  }}
+                >
                   <MonitorPlay className="h-4 w-4" />
                   {audioOnly ? 'Audio' : 'Video'}
                 </Button>
