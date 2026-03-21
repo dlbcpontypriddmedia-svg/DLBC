@@ -179,11 +179,16 @@ const Stream = () => {
   }, [sendHeartbeat, session]);
 
   useEffect(() => {
+    if (!streamActive) {
+      setElapsed(0);
+      return;
+    }
+
     const timer = setInterval(() => {
       setElapsed(Math.floor((Date.now() - startTime.current) / 1000));
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [streamActive]);
 
   useEffect(() => {
     const handleVisibility = () => {

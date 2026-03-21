@@ -42,6 +42,22 @@ Deno.serve(async (req) => {
       .eq('id', SETTINGS_ID)
       .single();
     const activeStreamTitle = settings?.stream_title || stream_title;
+
+    if (!settings?.is_attendance_active) {
+      return json({
+        status: 'inactive',
+        attendance: {
+          stream_session_id,
+          resumed_from_another_device: false,
+        },
+        stream: {
+          youtube_url: settings?.youtube_url || '',
+          stream_title: activeStreamTitle,
+          is_attendance_active: false,
+        },
+      }, 200, req);
+    }
+
     const resumeCutoff = new Date(
       Date.now() - Math.max((settings?.auto_attendance_duration_hours ?? 4) + 1, 2) * 60 * 60 * 1000,
     ).toISOString();

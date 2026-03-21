@@ -1,11 +1,24 @@
 import { corsResponse, getCorsHeaders } from '../_shared/cors.ts';
-import { getServiceClient } from '../_shared/supabase.ts';
+import { getServiceClient, SETTINGS_ID } from '../_shared/supabase.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return corsResponse(req);
 
   try {
     const sb = getServiceClient();
+    const { data: settings, error: settingsError } = await sb.from('stream_settings')
+      .select('is_attendance_active')
+      .eq('id', SETTINGS_ID)
+      .single();
+
+    if (settingsError) {
+      return json({ error: settingsError.message }, 500, req);
+    }
+
+    if (!settings?.is_attendance_active) {
+      return json(includeMembers ? { count: 0, members: [] } : { count: 0 }, 200, req);
+    }
+
     const twoMinAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
 
     const url = new URL(req.url);
