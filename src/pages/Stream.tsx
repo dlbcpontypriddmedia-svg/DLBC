@@ -48,6 +48,8 @@ type YouTubePlayer = {
   destroy: () => void;
 };
 
+const AUDIO_STREAM_URL = 'https://airtime.dclm.org/radio/8000/live';
+
 const Stream = () => {
   const navigate = useNavigate();
   const [session, setSession] = useState(() => getViewerSession());
@@ -323,7 +325,7 @@ const Stream = () => {
   }, [syncPlayerState]);
 
   useEffect(() => {
-    if (!videoId) {
+    if (audioOnly || !videoId) {
       playerRef.current?.destroy();
       playerRef.current = null;
       setIsPlaying(false);
@@ -355,7 +357,7 @@ const Stream = () => {
     return () => {
       window.onYouTubeIframeAPIReady = previousReady;
     };
-  }, [initializePlayer, videoId]);
+  }, [audioOnly, initializePlayer, videoId]);
 
   useEffect(() => {
     return () => {
@@ -461,7 +463,7 @@ const Stream = () => {
               This attendance session was already active on another device. You have been connected to the same live attendance record.
             </div>
           )}
-          <div ref={videoShellRef} className={`relative overflow-hidden rounded-[1.5rem] border border-primary/10 bg-slate-950 shadow-[0_30px_70px_-40px_rgba(0,0,0,0.9)] ${audioOnly ? 'h-28' : 'aspect-video'}`}>
+          <div ref={videoShellRef} className={`relative overflow-hidden rounded-[1.5rem] border border-primary/10 bg-slate-950 shadow-[0_30px_70px_-40px_rgba(0,0,0,0.9)] ${audioOnly ? 'min-h-[14rem]' : 'aspect-video'}`}>
             <div className="absolute left-4 top-4 z-10 flex flex-wrap items-center gap-2">
               <span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] backdrop-blur-sm ${
                 streamActive
@@ -471,11 +473,27 @@ const Stream = () => {
                 {streamActive ? 'Attendance Active' : 'Waiting for service'}
               </span>
             </div>
-            {videoId ? (
+            {audioOnly ? (
+              <div className="flex h-full min-h-[14rem] items-center justify-center px-6 py-10 text-center text-white">
+                <div className="w-full max-w-xl space-y-5">
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-white/15 bg-white/5">
+                    <Volume2 className="h-6 w-6 text-sky-200" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-lg font-semibold">Audio Stream</p>
+                    <p className="text-sm text-slate-300">
+                      Live audio is playing directly from the church stream.
+                    </p>
+                  </div>
+                  <audio controls autoPlay src={AUDIO_STREAM_URL} className="w-full">
+                    Your browser does not support the audio element.
+                  </audio>
+                </div>
+              </div>
+            ) : videoId ? (
               <div
                 ref={playerHostRef}
                 className="absolute inset-0 h-full w-full"
-                style={audioOnly ? { height: '280%', marginTop: '-90%' } : undefined}
               />
             ) : (
               <div className="flex h-full items-center justify-center px-6 text-center text-white">
@@ -501,15 +519,15 @@ const Stream = () => {
               </div>
 
               <div className="flex flex-wrap items-center justify-center gap-2">
-                <Button variant="outline" size="sm" onClick={handleTogglePlay} disabled={!videoId}>
+                <Button variant="outline" size="sm" onClick={handleTogglePlay} disabled={!videoId || audioOnly}>
                   {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                   {isPlaying ? 'Pause' : 'Play'}
                 </Button>
-                <Button variant="outline" size="sm" onClick={handleToggleMute} disabled={!videoId}>
+                <Button variant="outline" size="sm" onClick={handleToggleMute} disabled={!videoId || audioOnly}>
                   {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
                   {isMuted ? 'Unmute' : 'Mute'}
                 </Button>
-                <Button variant="outline" size="sm" onClick={handleFullscreen} disabled={!videoId}>
+                <Button variant="outline" size="sm" onClick={handleFullscreen} disabled={!videoId || audioOnly}>
                   <Maximize className="h-4 w-4" />
                   Fullscreen
                 </Button>
