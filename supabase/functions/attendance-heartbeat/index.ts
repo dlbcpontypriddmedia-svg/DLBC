@@ -2,6 +2,13 @@ import { corsResponse, getCorsHeaders } from '../_shared/cors.ts';
 import { sendRealtimeBroadcast } from '../_shared/realtime.ts';
 import { getServiceClient, SETTINGS_ID } from '../_shared/supabase.ts';
 
+function formatFamilyName(value?: string | null) {
+  const trimmed = value?.trim();
+  if (!trimmed) return null;
+
+  return /family$/i.test(trimmed) ? trimmed : `${trimmed} Family`;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return corsResponse(req);
 
@@ -12,7 +19,8 @@ Deno.serve(async (req) => {
       family_adult_count, family_young_adult_count, family_youth_count, family_children_count, presence_event } = body;
     const normalizedEmail = email?.trim().toLowerCase();
     const isLeaving = presence_event === 'leave';
-    const displayName = family_surname || name?.trim() || (attendance_type === 'Family' ? 'Family' : 'Viewer');
+    const normalizedFamilySurname = formatFamilyName(family_surname);
+    const displayName = normalizedFamilySurname || name?.trim() || (attendance_type === 'Family' ? 'Family' : 'Viewer');
     const activeCutoff = new Date(Date.now() - 2 * 60 * 1000).toISOString();
 
     // Validate required fields
@@ -78,7 +86,7 @@ Deno.serve(async (req) => {
           duration_seconds: durationSeconds,
           attendance_type: attendance_type || 'Single',
           age_category: age_category || null,
-          family_surname: family_surname || null,
+          family_surname: normalizedFamilySurname,
           family_adult_count: family_adult_count || null,
           family_young_adult_count: family_young_adult_count || null,
           family_youth_count: family_youth_count || null,
@@ -166,7 +174,7 @@ Deno.serve(async (req) => {
         duration_seconds: 0,
         attendance_type: attendance_type || 'Single',
         age_category: age_category || null,
-        family_surname: family_surname || null,
+        family_surname: normalizedFamilySurname,
         family_adult_count: family_adult_count || null,
         family_young_adult_count: family_young_adult_count || null,
         family_youth_count: family_youth_count || null,

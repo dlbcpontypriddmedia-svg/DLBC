@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { formatFamilyName } from '@/lib/attendance';
 
 interface Record {
   name: string | null;
@@ -59,7 +60,9 @@ const PDFExportButton = ({ records, branchName, serviceTitle }: Props) => {
         startY: y,
         head: [['Name', 'Email', 'Branch', 'Type', 'Duration', 'Date']],
         body: records.map(r => [
-          r.family_surname || r.name || 'Family',
+          r.attendance_type === 'Family'
+            ? formatFamilyName(r.family_surname) || 'Family'
+            : r.name || 'Viewer',
           r.email,
           r.branch,
           r.attendance_type,

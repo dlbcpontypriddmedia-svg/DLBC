@@ -8,6 +8,7 @@ import Logo from '@/components/Logo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { formatFamilyName, parseCountInput } from '@/lib/attendance';
 import { saveViewerSession, ViewerSession } from '@/lib/session';
 
 const Index = () => {
@@ -32,6 +33,7 @@ const Index = () => {
     setSubmitting(true);
 
     const sessionId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const normalizedFamilySurname = formatFamilyName(familySurname);
     const session: ViewerSession = {
       ...(type === 'Single' ? { name: name.trim() } : {}),
       email: email.trim().toLowerCase(),
@@ -43,7 +45,7 @@ const Index = () => {
       ...(type === 'Single'
         ? { age_category: ageCategory }
         : {
-            family_surname: familySurname,
+            family_surname: normalizedFamilySurname,
             family_adult_count: adultCount,
             family_young_adult_count: youngAdultCount,
             family_youth_count: youthCount,
@@ -156,7 +158,7 @@ const Index = () => {
                       id="surname"
                       value={familySurname}
                       onChange={(e) => setFamilySurname(e.target.value)}
-                      placeholder="Family surname"
+                      placeholder="e.g. Success"
                       maxLength={100}
                       className="h-11 bg-white/80"
                     />
@@ -171,11 +173,11 @@ const Index = () => {
                       <div key={label} className="space-y-2">
                         <Label className="text-xs uppercase tracking-[0.16em] text-muted-foreground">{label}</Label>
                         <Input
-                          type="number"
-                          min={0}
-                          max={50}
-                          value={val}
-                          onChange={(e) => set(Number(e.target.value))}
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          value={String(val)}
+                          onChange={(e) => set(parseCountInput(e.target.value))}
                           className="h-11 bg-white/80"
                         />
                       </div>

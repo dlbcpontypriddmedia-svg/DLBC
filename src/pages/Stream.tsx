@@ -9,6 +9,7 @@ import Logo from '@/components/Logo';
 import PageLoader from '@/components/PageLoader';
 import { useRealtimeRefresh } from '@/hooks/useRealtimeRefresh';
 import { useStreamPresenceNotifications } from '@/hooks/useStreamPresenceNotifications';
+import { formatFamilyName } from '@/lib/attendance';
 import { Button } from '@/components/ui/button';
 import { getViewerSession, clearViewerSession, updateViewerSession } from '@/lib/session';
 import { api } from '@/lib/api';
@@ -355,7 +356,9 @@ const Stream = () => {
   if (!session) return null;
   if (loading) return <PageLoader label="Preparing the live stream..." />;
 
-  const attendeeLabel = session.family_surname || session.name || 'Family';
+  const attendeeLabel = session.attendance_type === 'Family'
+    ? formatFamilyName(session.family_surname) || 'Family'
+    : session.name || 'Viewer';
   const familyStats: Array<{ icon: JSX.Element; label: string }> = [
     session.family_adult_count
       ? {

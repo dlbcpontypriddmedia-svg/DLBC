@@ -9,6 +9,7 @@ import Logo from '@/components/Logo';
 import PageLoader from '@/components/PageLoader';
 import PDFExportButton from '@/components/PDFExportButton';
 import { useRealtimeRefresh } from '@/hooks/useRealtimeRefresh';
+import { formatFamilyName } from '@/lib/attendance';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -257,7 +258,11 @@ const AttendanceDashboard = () => {
                   <TableBody>
                     {records.map((record) => (
                       <TableRow key={record.id}>
-                        <TableCell className="font-medium">{record.family_surname || record.name || 'Family'}</TableCell>
+                        <TableCell className="font-medium">
+                          {record.attendance_type === 'Family'
+                            ? formatFamilyName(record.family_surname) || 'Family'
+                            : record.name || 'Viewer'}
+                        </TableCell>
                         <TableCell className="text-muted-foreground">{record.email}</TableCell>
                         <TableCell>
                           <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${
