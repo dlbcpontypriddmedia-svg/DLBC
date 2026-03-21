@@ -251,8 +251,44 @@ const Stream = () => {
   };
 
   function getVideoId(url: string) {
-    const match = url.match(/(?:v=|\/embed\/|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-    return match?.[1];
+    const trimmed = url.trim();
+    if (!trimmed) return null;
+
+    if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) {
+      return trimmed;
+    }
+
+    try {
+      const parsed = new URL(trimmed);
+      const hostname = parsed.hostname.replace(/^www\./, '');
+
+      if (hostname === 'youtu.be') {
+        const id = parsed.pathname.split('/').filter(Boolean)[0];
+        return id && /^[a-zA-Z0-9_-]{11}$/.test(id) ? id : null;
+      }
+
+      if (hostname === 'youtube.com' || hostname === 'm.youtube.com') {
+        const watchId = parsed.searchParams.get('v');
+        if (watchId && /^[a-zA-Z0-9_-]{11}$/.test(watchId)) {
+          return watchId;
+        }
+
+        const pathParts = parsed.pathname.split('/').filter(Boolean);
+        const candidate = pathParts[pathParts.length - 1];
+        if (
+          ['embed', 'live', 'shorts'].includes(pathParts[0] || '') &&
+          candidate &&
+          /^[a-zA-Z0-9_-]{11}$/.test(candidate)
+        ) {
+          return candidate;
+        }
+      }
+    } catch {
+      // Fall through to regex fallback for malformed-but-usable input.
+    }
+
+    const match = trimmed.match(/([a-zA-Z0-9_-]{11})/);
+    return match?.[1] || null;
   }
 
   const syncPlayerState = useCallback((player: YouTubePlayer) => {
