@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Dot, Users } from 'lucide-react';
 
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useRealtimeRefresh } from '@/hooks/useRealtimeRefresh';
 import { api } from '@/lib/api';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -27,9 +28,28 @@ type ActiveViewersDialogProps = {
   branchId?: string;
 };
 
+const sortMembers = (members: ActiveViewerMember[]) => [...members].sort((left, right) => {
+  const branchCompare = (left.branch_name || '').localeCompare(right.branch_name || '');
+  if (branchCompare !== 0) return branchCompare;
+
+  const nameCompare = left.display_name.localeCompare(right.display_name);
+  if (nameCompare !== 0) return nameCompare;
+
+  return left.stream_session_id.localeCompare(right.stream_session_id);
+});
+
+const getInitials = (value: string) => value
+  .split(/\s+/)
+  .filter(Boolean)
+  .slice(0, 2)
+  .map((part) => part[0]?.toUpperCase() || '')
+  .join('') || 'AV';
+
 const ActiveViewersDialog = ({ open, onOpenChange, branchId }: ActiveViewersDialogProps) => {
   const [members, setMembers] = useState<ActiveViewerMember[]>([]);
   const [loading, setLoading] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
+  const fetchingRef = useRef(false);
 
   const subscriptions = useMemo(() => (
     branchId
@@ -37,20 +57,24 @@ const ActiveViewersDialog = ({ open, onOpenChange, branchId }: ActiveViewersDial
       : [{ topic: 'admin:attendance', events: ['attendance_changed'] }]
   ), [branchId]);
 
-  const fetchMembers = useCallback(async () => {
-    setLoading(true);
+  const fetchMembers = useCallback(async (showLoading = false) => {
+    if (fetchingRef.current) return;
+    fetchingRef.current = true;
+    if (showLoading) setLoading(true);
     try {
       const response = await api.getActiveViewerMembers(branchId);
-      setMembers((response.members || []) as ActiveViewerMember[]);
+      setMembers(sortMembers((response.members || []) as ActiveViewerMember[]));
+      setHasLoaded(true);
     } finally {
-      setLoading(false);
+      fetchingRef.current = false;
+      if (showLoading) setLoading(false);
     }
   }, [branchId]);
 
   useEffect(() => {
     if (!open) return;
-    void fetchMembers();
-  }, [fetchMembers, open]);
+    void fetchMembers(!hasLoaded);
+  }, [fetchMembers, hasLoaded, open]);
 
   useEffect(() => {
     if (!open) return;
@@ -58,7 +82,7 @@ const ActiveViewersDialog = ({ open, onOpenChange, branchId }: ActiveViewersDial
     const handleRefresh = (event: Event) => {
       const detail = (event as CustomEvent<{ branchId?: string }>).detail;
       if (!detail?.branchId || !branchId || detail.branchId === branchId) {
-        void fetchMembers();
+        void fetchMembers(false);
       }
     };
 
@@ -72,7 +96,7 @@ const ActiveViewersDialog = ({ open, onOpenChange, branchId }: ActiveViewersDial
     subscriptions,
     onRefresh: () => {
       if (open) {
-        void fetchMembers();
+        void fetchMembers(false);
       }
     },
     enabled: open,
@@ -99,7 +123,7 @@ const ActiveViewersDialog = ({ open, onOpenChange, branchId }: ActiveViewersDial
         </DialogHeader>
 
         <div className="max-h-[60vh] overflow-y-auto px-6 py-5">
-          {loading ? (
+          {loading && !hasLoaded ? (
             <div className="flex min-h-40 items-center justify-center">
               <LoadingSpinner className="text-primary" />
             </div>
@@ -114,13 +138,21 @@ const ActiveViewersDialog = ({ open, onOpenChange, branchId }: ActiveViewersDial
                   key={member.stream_session_id}
                   className="flex items-center justify-between gap-4 rounded-[1.25rem] border border-white/50 bg-white/50 px-4 py-3"
                 >
-                  <div className="min-w-0">
-                    <p className="truncate font-medium text-foreground">{member.display_name}</p>
-                    {!branchId && member.branch_name ? (
-                      <p className="mt-1 text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                        {member.branch_name}
-                      </p>
-                    ) : null}
+                  <div className="flex min-w-0 items-center gap-3">
+                    <Avatar className="h-10 w-10 border border-primary/10 bg-primary/5">
+                      <AvatarFallback className="bg-primary/10 text-xs font-semibold text-primary">
+                        {getInitials(member.display_name)}
+                      </AvatarFallback>
+                    </Avatar>
+
+                    <div className="min-w-0">
+                      <p className="truncate font-medium text-foreground">{member.display_name}</p>
+                      {!branchId && member.branch_name ? (
+                        <p className="mt-1 text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                          {member.branch_name}
+                        </p>
+                      ) : null}
+                    </div>
                   </div>
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-primary/10 bg-primary/5">
                     <Dot className="h-5 w-5 text-[hsl(var(--success))]" />

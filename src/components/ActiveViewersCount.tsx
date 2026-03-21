@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { Users } from 'lucide-react';
 import { api } from '@/lib/api';
 import ActiveViewersDialog from '@/components/ActiveViewersDialog';
-import LoadingSpinner from '@/components/LoadingSpinner';
 import { useRealtimeRefresh } from '@/hooks/useRealtimeRefresh';
 
 const viewerCountCache = new Map<string, number>();
@@ -10,9 +9,9 @@ const viewerCountCache = new Map<string, number>();
 const ActiveViewersCount = ({ branchId, compact = false, iconOnly = false }: { branchId?: string; compact?: boolean; iconOnly?: boolean }) => {
   const cacheKey = branchId || '__all__';
   const [count, setCount] = useState(() => viewerCountCache.get(cacheKey) || 0);
-  const [initialLoading, setInitialLoading] = useState(() => !viewerCountCache.has(cacheKey));
   const [open, setOpen] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval>>();
+  const fetchingRef = useRef(false);
   const subscriptions = useMemo(() => (
     branchId
       ? [{ topic: `branch:${branchId}`, events: ['viewer_joined', 'viewer_left'] }]
@@ -20,6 +19,9 @@ const ActiveViewersCount = ({ branchId, compact = false, iconOnly = false }: { b
   ), [branchId]);
 
   const fetchCount = useCallback(() => {
+    if (fetchingRef.current) return;
+    fetchingRef.current = true;
+
     api.getActiveViewers(branchId)
       .then(r => {
         const nextCount = r.count || 0;
@@ -27,7 +29,9 @@ const ActiveViewersCount = ({ branchId, compact = false, iconOnly = false }: { b
         setCount(nextCount);
       })
       .catch(() => {})
-      .finally(() => setInitialLoading(false));
+      .finally(() => {
+        fetchingRef.current = false;
+      });
   }, [branchId, cacheKey]);
 
   useRealtimeRefresh({
@@ -44,7 +48,7 @@ const ActiveViewersCount = ({ branchId, compact = false, iconOnly = false }: { b
     };
 
     fetchCount();
-    intervalRef.current = setInterval(fetchCount, 5000);
+    intervalRef.current = setInterval(fetchCount, 15000);
     window.addEventListener('active-viewers:refresh', handleRefresh as EventListener);
     return () => {
       clearInterval(intervalRef.current);
@@ -62,11 +66,7 @@ const ActiveViewersCount = ({ branchId, compact = false, iconOnly = false }: { b
           : "flex min-w-[132px] items-center justify-center gap-2 rounded-full border border-primary/10 bg-white/80 px-3 py-1.5 text-sm text-muted-foreground shadow-sm transition hover:border-primary/20 hover:text-foreground"}
         aria-label="View active viewers"
       >
-        {initialLoading ? (
-          <LoadingSpinner size="sm" className="text-primary/70" />
-        ) : (
-          <span className="inline-block h-2 w-2 rounded-full bg-[hsl(var(--success))] animate-pulse" />
-        )}
+        <span className="inline-block h-2 w-2 rounded-full bg-[hsl(var(--success))] animate-pulse" />
         {iconOnly ? <Users className="h-4 w-4 text-primary" /> : null}
         <span className="tabular-nums">{count}</span>
         {!iconOnly && <span>viewer{count !== 1 ? 's' : ''} online</span>}
