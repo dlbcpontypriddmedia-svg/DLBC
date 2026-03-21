@@ -375,7 +375,7 @@ const AdminDashboard = () => {
       />
 
       <div className="mx-auto flex min-h-[calc(100vh-2rem)] max-w-7xl flex-col gap-4">
-        <header className="surface-panel flex flex-col gap-4 px-5 py-4 md:flex-row md:items-center md:justify-between">
+        <header className="surface-panel flex flex-col gap-4 px-4 py-4 sm:px-5 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-wrap items-center gap-4">
             <Logo />
             <div className="rounded-full border border-primary/10 bg-primary/[0.03] px-3 py-1.5 text-sm font-medium text-foreground">
@@ -394,12 +394,12 @@ const AdminDashboard = () => {
         </header>
 
         <main className="space-y-4">
-          <section className="surface-panel p-6">
+          <section className="surface-panel p-4 sm:p-6">
             <div className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr] xl:items-end">
               <div className="space-y-4">
                 <div className="space-y-2">
                   <p className="text-sm font-semibold uppercase tracking-[0.28em] text-primary/75">Control Center</p>
-                  <h1 className="text-3xl font-semibold text-foreground">Admin Dashboard</h1>
+                  <h1 className="text-2xl font-semibold text-foreground sm:text-3xl">Admin Dashboard</h1>
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -443,12 +443,12 @@ const AdminDashboard = () => {
             </div>
           </section>
 
-          <div className="surface-panel grid gap-1 grid-cols-2 p-1 sm:grid-cols-4">
+          <div className="surface-panel grid grid-cols-2 gap-1 p-1 sm:grid-cols-4">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`rounded-[1rem] px-3 py-3 text-sm font-semibold transition-all ${
+                className={`rounded-[1rem] px-3 py-3 text-xs font-semibold transition-all sm:text-sm ${
                   activeTab === tab.id
                     ? 'bg-primary text-primary-foreground shadow-sm'
                     : 'text-muted-foreground hover:bg-white hover:text-foreground'
@@ -462,7 +462,7 @@ const AdminDashboard = () => {
           {activeTab === 'stream' && (
             <div className="grid gap-4 xl:grid-cols-[0.88fr_1.12fr]">
               <div className="space-y-4">
-                <section className="surface-panel p-5">
+                <section className="surface-panel p-4 sm:p-5">
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div className="space-y-3">
                       <div className="flex items-center gap-2 text-muted-foreground">
@@ -495,9 +495,10 @@ const AdminDashboard = () => {
                     </div>
                   </div>
 
-                  <div className="mt-5 flex flex-wrap gap-3">
+                  <div className="mt-5 grid gap-3 sm:flex sm:flex-wrap">
                     <Button
                       size="sm"
+                      className="w-full sm:w-auto"
                       variant={settings?.is_attendance_active ? 'destructive' : 'default'}
                       onClick={toggleAttendance}
                       disabled={togglingAttendance}
@@ -509,14 +510,14 @@ const AdminDashboard = () => {
                           ? 'Stop Attendance'
                           : 'Start Attendance'}
                     </Button>
-                    <Button variant="outline" onClick={checkLiveNow} disabled={checkingLive}>
+                    <Button variant="outline" className="w-full sm:w-auto" onClick={checkLiveNow} disabled={checkingLive}>
                       {checkingLive ? <LoadingSpinner size="sm" className="text-current" /> : <RadioTower className="h-4 w-4" />}
                       {checkingLive ? 'Checking...' : 'Check Live Now'}
                     </Button>
                   </div>
                 </section>
 
-                <section className="surface-panel p-5">
+                <section className="surface-panel p-4 sm:p-5">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/80">Tracked URL</p>
                   <p className="mt-2 break-all text-sm text-foreground">{settings?.youtube_url || 'No YouTube URL configured.'}</p>
                 </section>
@@ -563,12 +564,12 @@ const AdminDashboard = () => {
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-3 border-t border-primary/10 pt-4">
-                    <Button onClick={saveSettings} disabled={savingSettings}>
+                  <div className="grid gap-3 border-t border-primary/10 pt-4 sm:flex sm:flex-wrap">
+                    <Button className="w-full sm:w-auto" onClick={saveSettings} disabled={savingSettings}>
                       {savingSettings ? <LoadingSpinner size="sm" className="text-current" /> : <Save className="h-4 w-4" />}
                       {savingSettings ? 'Saving...' : 'Save Settings'}
                     </Button>
-                    <Button variant="outline" onClick={checkLiveNow} disabled={checkingLive}>
+                    <Button className="w-full sm:w-auto" variant="outline" onClick={checkLiveNow} disabled={checkingLive}>
                       {checkingLive ? <LoadingSpinner size="sm" className="text-current" /> : <RadioTower className="h-4 w-4" />}
                       {checkingLive ? 'Checking...' : 'Run Live Check'}
                     </Button>
@@ -580,7 +581,7 @@ const AdminDashboard = () => {
 
           {activeTab === 'attendance' && (
             <div className="space-y-4">
-              <section className="surface-panel grid gap-3 p-5 md:grid-cols-2 xl:flex xl:flex-wrap xl:items-end">
+              <section className="surface-panel grid gap-3 p-4 sm:p-5 md:grid-cols-2 xl:flex xl:flex-wrap xl:items-end">
                 <div className="space-y-1">
                   <label className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Service</label>
                   <select value={filterTitle} onChange={(e) => setFilterTitle(e.target.value)} className="flex h-10 w-full rounded-xl border border-input bg-white/80 px-3 text-sm md:min-w-[11rem]">
@@ -610,7 +611,7 @@ const AdminDashboard = () => {
                 <PDFExportButton records={records} serviceTitle={filterTitle || undefined} />
               </section>
 
-              <section className="grid gap-3 md:grid-cols-3">
+              <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 <div className="surface-panel p-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Filtered Records</p>
                   <p className="mt-2 text-2xl font-semibold text-foreground">{records.length}</p>
@@ -633,7 +634,48 @@ const AdminDashboard = () => {
                       <p className="mt-1">Attendance records will appear here after viewers join the stream.</p>
                     </div>
                   ) : (
-                    <Table className="min-w-[860px]">
+                    <>
+                      <div className="space-y-3 p-4 md:hidden">
+                        {records.map((record) => (
+                          <div key={record.id} className="rounded-[1.25rem] border border-primary/10 bg-white/70 p-4">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <p className="font-semibold text-foreground">
+                                  {record.attendance_type === 'Family'
+                                    ? formatFamilyName(record.family_surname) || 'Family'
+                                    : record.name || 'Viewer'}
+                                </p>
+                                <p className="mt-1 break-all text-sm text-muted-foreground">{record.email}</p>
+                              </div>
+                              <span className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-xs font-semibold ${
+                                record.attendance_type === 'Family'
+                                  ? 'bg-amber-100 text-amber-700'
+                                  : 'bg-slate-100 text-slate-600'
+                              }`}>
+                                {record.attendance_type}
+                              </span>
+                            </div>
+                            <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+                              <div>
+                                <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Branch</p>
+                                <p className="mt-1 font-medium text-foreground">{record.branch}</p>
+                              </div>
+                              <div>
+                                <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Duration</p>
+                                <p className="mt-1 font-medium text-foreground">{formatDuration(record.duration_seconds)}</p>
+                              </div>
+                            </div>
+                            <div className="mt-3">
+                              <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Service</p>
+                              <p className="mt-1 text-sm text-foreground">{record.stream_title}</p>
+                            </div>
+                            <p className="mt-3 text-xs text-muted-foreground">{new Date(record.timestamp).toLocaleDateString()}</p>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="hidden md:block">
+                        <Table className="min-w-[860px]">
                       <TableHeader>
                         <TableRow>
                           <TableHead>Name</TableHead>
@@ -670,7 +712,9 @@ const AdminDashboard = () => {
                           </TableRow>
                         ))}
                       </TableBody>
-                    </Table>
+                        </Table>
+                      </div>
+                    </>
                   )}
                 </CardContent>
               </Card>
@@ -679,7 +723,7 @@ const AdminDashboard = () => {
 
           {activeTab === 'branches' && (
             <div className="grid gap-4 xl:grid-cols-[0.85fr_1.15fr]">
-              <Card className="surface-panel border-none shadow-none">
+                <Card className="surface-panel border-none shadow-none">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-xl">Add Branch</CardTitle>
                 </CardHeader>
@@ -688,7 +732,7 @@ const AdminDashboard = () => {
                     <Label>Branch Name</Label>
                     <Input value={newBranch} onChange={(e) => setNewBranch(e.target.value)} placeholder="Enter branch name" className="h-11 bg-white/80" />
                   </div>
-                  <Button onClick={addBranch} disabled={!newBranch.trim() || addingBranch}>
+                  <Button className="w-full sm:w-auto" onClick={addBranch} disabled={!newBranch.trim() || addingBranch}>
                     {addingBranch ? <LoadingSpinner size="sm" className="text-current" /> : <Plus className="h-4 w-4" />}
                     {addingBranch ? 'Adding...' : 'Add Branch'}
                   </Button>
@@ -709,6 +753,7 @@ const AdminDashboard = () => {
                       </select>
                       <Button
                         variant="outline"
+                        className="w-full sm:w-auto"
                         disabled={!mergeSourceBranch || !mergeTargetBranch || mergeSourceBranch === mergeTargetBranch || mergingBranch}
                         onClick={() => {
                           const sourceName = branches.find((branch) => branch.id === mergeSourceBranch)?.name || 'source branch';
@@ -734,7 +779,46 @@ const AdminDashboard = () => {
                   <CardTitle className="text-xl">Branches</CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
-                  <Table className="min-w-[560px]">
+                  <>
+                    <div className="space-y-3 p-4 md:hidden">
+                      {branches.map((branch) => (
+                        <div key={branch.id} className="rounded-[1.25rem] border border-primary/10 bg-white/70 p-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="font-semibold text-foreground">{branch.name}</p>
+                              <p className="mt-1 text-sm text-muted-foreground">{branch.attendance_count || 0} records</p>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-destructive hover:text-destructive"
+                              onClick={() => setPendingConfirm({
+                                type: 'delete-branch',
+                                id: branch.id,
+                                title: 'Delete branch?',
+                                description: `This will remove ${branch.name} from the branch list.`,
+                              })}
+                              disabled={deletingBranchId === branch.id || (branch.attendance_count || 0) > 0 || (branch.staff_count || 0) > 0}
+                            >
+                              {deletingBranchId === branch.id ? <LoadingSpinner size="sm" className="text-current" /> : <Trash2 className="h-4 w-4" />}
+                              {(branch.attendance_count || 0) > 0
+                                ? 'Has History'
+                                : (branch.staff_count || 0) > 0
+                                  ? 'Has Staff'
+                                  : deletingBranchId === branch.id
+                                    ? 'Deleting...'
+                                    : 'Delete'}
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                      {branches.length === 0 && (
+                        <div className="py-10 text-center text-muted-foreground">No branches yet.</div>
+                      )}
+                    </div>
+
+                    <div className="hidden md:block">
+                      <Table className="min-w-[560px]">
                     <TableHeader>
                       <TableRow>
                         <TableHead>Name</TableHead>
@@ -778,7 +862,9 @@ const AdminDashboard = () => {
                         </TableRow>
                       )}
                     </TableBody>
-                  </Table>
+                      </Table>
+                    </div>
+                  </>
                 </CardContent>
               </Card>
             </div>
@@ -802,7 +888,7 @@ const AdminDashboard = () => {
                     <Label>Staff Password</Label>
                     <Input type="password" value={newStaffPassword} onChange={(e) => setNewStaffPassword(e.target.value)} placeholder="Enter staff password" className="h-11 bg-white/80" />
                   </div>
-                  <Button onClick={addStaff} disabled={!newStaffBranch || !newStaffPassword || addingStaff}>
+                  <Button className="w-full sm:w-auto" onClick={addStaff} disabled={!newStaffBranch || !newStaffPassword || addingStaff}>
                     {addingStaff ? <LoadingSpinner size="sm" className="text-current" /> : <Plus className="h-4 w-4" />}
                     {addingStaff ? 'Creating...' : 'Add Staff'}
                   </Button>
@@ -814,7 +900,36 @@ const AdminDashboard = () => {
                   <CardTitle className="text-xl">Staff Accounts</CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
-                  <Table className="min-w-[560px]">
+                  <>
+                    <div className="space-y-3 p-4 md:hidden">
+                      {staffList.map((staff) => (
+                        <div key={staff.id} className="rounded-[1.25rem] border border-primary/10 bg-white/70 p-4">
+                          <p className="font-semibold text-foreground">{branches.find((branch) => branch.id === staff.branch_id)?.name || staff.branch_id}</p>
+                          <p className="mt-1 text-sm text-muted-foreground">{new Date(staff.created_at).toLocaleDateString()}</p>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="mt-3 text-destructive hover:text-destructive"
+                            onClick={() => setPendingConfirm({
+                              type: 'delete-staff',
+                              id: staff.id,
+                              title: 'Delete staff account?',
+                              description: 'This will remove the selected staff account from the admin workspace.',
+                            })}
+                            disabled={deletingStaffId === staff.id}
+                          >
+                            {deletingStaffId === staff.id ? <LoadingSpinner size="sm" className="text-current" /> : <Trash2 className="h-4 w-4" />}
+                            {deletingStaffId === staff.id ? 'Deleting...' : 'Delete'}
+                          </Button>
+                        </div>
+                      ))}
+                      {staffList.length === 0 && (
+                        <div className="py-10 text-center text-muted-foreground">No staff accounts yet.</div>
+                      )}
+                    </div>
+
+                    <div className="hidden md:block">
+                      <Table className="min-w-[560px]">
                     <TableHeader>
                       <TableRow>
                         <TableHead>Branch</TableHead>
@@ -852,7 +967,9 @@ const AdminDashboard = () => {
                         </TableRow>
                       )}
                     </TableBody>
-                  </Table>
+                      </Table>
+                    </div>
+                  </>
                 </CardContent>
               </Card>
             </div>
