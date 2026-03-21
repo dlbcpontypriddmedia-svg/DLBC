@@ -5,9 +5,12 @@ import ActiveViewersDialog from '@/components/ActiveViewersDialog';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useRealtimeRefresh } from '@/hooks/useRealtimeRefresh';
 
+const viewerCountCache = new Map<string, number>();
+
 const ActiveViewersCount = ({ branchId, compact = false, iconOnly = false }: { branchId?: string; compact?: boolean; iconOnly?: boolean }) => {
-  const [count, setCount] = useState(0);
-  const [initialLoading, setInitialLoading] = useState(true);
+  const cacheKey = branchId || '__all__';
+  const [count, setCount] = useState(() => viewerCountCache.get(cacheKey) || 0);
+  const [initialLoading, setInitialLoading] = useState(() => !viewerCountCache.has(cacheKey));
   const [open, setOpen] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval>>();
   const subscriptions = useMemo(() => (
@@ -18,10 +21,14 @@ const ActiveViewersCount = ({ branchId, compact = false, iconOnly = false }: { b
 
   const fetchCount = useCallback(() => {
     api.getActiveViewers(branchId)
-      .then(r => setCount(r.count || 0))
+      .then(r => {
+        const nextCount = r.count || 0;
+        viewerCountCache.set(cacheKey, nextCount);
+        setCount(nextCount);
+      })
       .catch(() => {})
       .finally(() => setInitialLoading(false));
-  }, [branchId]);
+  }, [branchId, cacheKey]);
 
   useRealtimeRefresh({
     subscriptions,
