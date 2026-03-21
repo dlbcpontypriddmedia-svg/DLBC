@@ -7,7 +7,7 @@ import { useRealtimeRefresh } from '@/hooks/useRealtimeRefresh';
 
 const ActiveViewersCount = ({ branchId, compact = false, iconOnly = false }: { branchId?: string; compact?: boolean; iconOnly?: boolean }) => {
   const [count, setCount] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval>>();
   const subscriptions = useMemo(() => (
@@ -20,7 +20,7 @@ const ActiveViewersCount = ({ branchId, compact = false, iconOnly = false }: { b
     api.getActiveViewers(branchId)
       .then(r => setCount(r.count || 0))
       .catch(() => {})
-      .finally(() => setLoading(false));
+      .finally(() => setInitialLoading(false));
   }, [branchId]);
 
   useRealtimeRefresh({
@@ -55,7 +55,7 @@ const ActiveViewersCount = ({ branchId, compact = false, iconOnly = false }: { b
           : "flex min-w-[132px] items-center justify-center gap-2 rounded-full border border-primary/10 bg-white/80 px-3 py-1.5 text-sm text-muted-foreground shadow-sm transition hover:border-primary/20 hover:text-foreground"}
         aria-label="View active viewers"
       >
-        {loading ? (
+        {initialLoading ? (
           <LoadingSpinner size="sm" className="text-primary/70" />
         ) : (
           <span className="inline-block h-2 w-2 rounded-full bg-[hsl(var(--success))] animate-pulse" />
