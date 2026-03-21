@@ -3,6 +3,18 @@ import { verifyJwt, getSessionToken } from '../_shared/auth.ts';
 import { sendRealtimeBroadcast } from '../_shared/realtime.ts';
 import { getServiceClient, SETTINGS_ID } from '../_shared/supabase.ts';
 
+async function fetchYouTubeTitle(url: string) {
+  try {
+    const response = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`);
+    if (!response.ok) return null;
+
+    const data = await response.json();
+    return typeof data?.title === 'string' ? data.title : null;
+  } catch {
+    return null;
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return corsResponse(req);
 
@@ -31,8 +43,20 @@ Deno.serve(async (req) => {
         return json({ settings: data }, 200, req);
       }
       case 'update_settings': {
+        const nextSettings = { ...params.settings } as Record<string, unknown>;
+        const manualUrl = typeof nextSettings.youtube_url === 'string' ? nextSettings.youtube_url.trim() : '';
+
+        if (manualUrl) {
+          const title = await fetchYouTubeTitle(manualUrl);
+          if (title) {
+            nextSettings.stream_title = title;
+          }
+        } else if (nextSettings.youtube_url === '') {
+          nextSettings.stream_title = null;
+        }
+
         const { data } = await sb.from('stream_settings')
-          .update({ ...params.settings, updated_at: new Date().toISOString() })
+          .update({ ...nextSettings, updated_at: new Date().toISOString() })
           .eq('id', SETTINGS_ID).select().single();
         await Promise.all([
           sendRealtimeBroadcast({
