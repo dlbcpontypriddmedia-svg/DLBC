@@ -1,11 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo } from 'react';
 import { Dot, Users } from 'lucide-react';
 
 import LoadingSpinner from '@/components/LoadingSpinner';
-import { useRealtimeRefresh } from '@/hooks/useRealtimeRefresh';
-import { api } from '@/lib/api';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { useActiveViewers, type ActiveViewerMember } from '@/hooks/useActiveViewers';
 import {
   Dialog,
   DialogContent,
@@ -13,14 +12,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-
-type ActiveViewerMember = {
-  id: string;
-  stream_session_id: string;
-  display_name: string;
-  branch_id: string;
-  branch_name?: string | null;
-};
 
 type ActiveViewersDialogProps = {
   open: boolean;
@@ -46,61 +37,8 @@ const getInitials = (value: string) => value
   .join('') || 'AV';
 
 const ActiveViewersDialog = ({ open, onOpenChange, branchId }: ActiveViewersDialogProps) => {
-  const [members, setMembers] = useState<ActiveViewerMember[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [hasLoaded, setHasLoaded] = useState(false);
-  const fetchingRef = useRef(false);
-
-  const subscriptions = useMemo(() => (
-    branchId
-      ? [{ topic: `branch:${branchId}`, events: ['viewer_joined', 'viewer_left'] }]
-      : [{ topic: 'admin:attendance', events: ['attendance_changed'] }]
-  ), [branchId]);
-
-  const fetchMembers = useCallback(async (showLoading = false) => {
-    if (fetchingRef.current) return;
-    fetchingRef.current = true;
-    if (showLoading) setLoading(true);
-    try {
-      const response = await api.getActiveViewerMembers(branchId);
-      setMembers(sortMembers((response.members || []) as ActiveViewerMember[]));
-      setHasLoaded(true);
-    } finally {
-      fetchingRef.current = false;
-      if (showLoading) setLoading(false);
-    }
-  }, [branchId]);
-
-  useEffect(() => {
-    if (!open) return;
-    void fetchMembers(!hasLoaded);
-  }, [fetchMembers, hasLoaded, open]);
-
-  useEffect(() => {
-    if (!open) return;
-
-    const handleRefresh = (event: Event) => {
-      const detail = (event as CustomEvent<{ branchId?: string }>).detail;
-      if (!detail?.branchId || !branchId || detail.branchId === branchId) {
-        void fetchMembers(false);
-      }
-    };
-
-    window.addEventListener('active-viewers:refresh', handleRefresh as EventListener);
-    return () => {
-      window.removeEventListener('active-viewers:refresh', handleRefresh as EventListener);
-    };
-  }, [branchId, fetchMembers, open]);
-
-  useRealtimeRefresh({
-    subscriptions,
-    onRefresh: () => {
-      if (open) {
-        void fetchMembers(false);
-      }
-    },
-    enabled: open,
-  });
+  const { members, hasLoaded } = useActiveViewers(branchId);
+  const sortedMembers = useMemo(() => sortMembers(members), [members]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -123,17 +61,17 @@ const ActiveViewersDialog = ({ open, onOpenChange, branchId }: ActiveViewersDial
         </DialogHeader>
 
         <div className="max-h-[60vh] overflow-y-auto px-6 py-5">
-          {loading && !hasLoaded ? (
+          {!hasLoaded ? (
             <div className="flex min-h-40 items-center justify-center">
               <LoadingSpinner className="text-primary" />
             </div>
-          ) : members.length === 0 ? (
+          ) : sortedMembers.length === 0 ? (
             <div className="rounded-[1.25rem] border border-dashed border-primary/15 bg-white/45 px-5 py-10 text-center text-sm text-muted-foreground">
               No active viewers right now.
             </div>
           ) : (
             <div className="space-y-3">
-              {members.map((member) => (
+              {sortedMembers.map((member) => (
                 <div
                   key={member.stream_session_id}
                   className="flex items-center justify-between gap-4 rounded-[1.25rem] border border-white/50 bg-white/50 px-4 py-3"

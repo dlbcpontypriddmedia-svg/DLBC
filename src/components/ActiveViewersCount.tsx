@@ -1,60 +1,12 @@
-import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
+import { useState } from 'react';
 import { Users } from 'lucide-react';
-import { api } from '@/lib/api';
-import ActiveViewersDialog from '@/components/ActiveViewersDialog';
-import { useRealtimeRefresh } from '@/hooks/useRealtimeRefresh';
 
-const viewerCountCache = new Map<string, number>();
+import ActiveViewersDialog from '@/components/ActiveViewersDialog';
+import { useActiveViewers } from '@/hooks/useActiveViewers';
 
 const ActiveViewersCount = ({ branchId, compact = false, iconOnly = false }: { branchId?: string; compact?: boolean; iconOnly?: boolean }) => {
-  const cacheKey = branchId || '__all__';
-  const [count, setCount] = useState(() => viewerCountCache.get(cacheKey) || 0);
+  const { count } = useActiveViewers(branchId);
   const [open, setOpen] = useState(false);
-  const intervalRef = useRef<ReturnType<typeof setInterval>>();
-  const fetchingRef = useRef(false);
-  const subscriptions = useMemo(() => (
-    branchId
-      ? [{ topic: `branch:${branchId}`, events: ['viewer_joined', 'viewer_left'] }]
-      : [{ topic: 'admin:attendance', events: ['attendance_changed'] }]
-  ), [branchId]);
-
-  const fetchCount = useCallback(() => {
-    if (fetchingRef.current) return;
-    fetchingRef.current = true;
-
-    api.getActiveViewers(branchId)
-      .then(r => {
-        const nextCount = r.count || 0;
-        viewerCountCache.set(cacheKey, nextCount);
-        setCount(nextCount);
-      })
-      .catch(() => {})
-      .finally(() => {
-        fetchingRef.current = false;
-      });
-  }, [branchId, cacheKey]);
-
-  useRealtimeRefresh({
-    subscriptions,
-    onRefresh: fetchCount,
-  });
-
-  useEffect(() => {
-    const handleRefresh = (event: Event) => {
-      const detail = (event as CustomEvent<{ branchId?: string }>).detail;
-      if (!detail?.branchId || !branchId || detail.branchId === branchId) {
-        fetchCount();
-      }
-    };
-
-    fetchCount();
-    intervalRef.current = setInterval(fetchCount, 15000);
-    window.addEventListener('active-viewers:refresh', handleRefresh as EventListener);
-    return () => {
-      clearInterval(intervalRef.current);
-      window.removeEventListener('active-viewers:refresh', handleRefresh as EventListener);
-    };
-  }, [branchId, fetchCount]);
 
   return (
     <>

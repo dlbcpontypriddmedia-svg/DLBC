@@ -3,6 +3,8 @@ import { verifyJwt, getSessionToken } from '../_shared/auth.ts';
 import { sendRealtimeBroadcast } from '../_shared/realtime.ts';
 import { getServiceClient, SETTINGS_ID } from '../_shared/supabase.ts';
 
+const DEFAULT_MANUAL_STREAM_TITLE = 'Deeper Life Bible Church';
+
 async function fetchYouTubeTitle(url: string) {
   try {
     const response = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`);
@@ -48,9 +50,7 @@ Deno.serve(async (req) => {
 
         if (manualUrl) {
           const title = await fetchYouTubeTitle(manualUrl);
-          if (title) {
-            nextSettings.stream_title = title;
-          }
+          nextSettings.stream_title = title || DEFAULT_MANUAL_STREAM_TITLE;
         } else if (nextSettings.youtube_url === '') {
           nextSettings.stream_title = null;
         }
