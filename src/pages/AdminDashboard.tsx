@@ -461,7 +461,7 @@ const AdminDashboard = () => {
 
           {activeTab === 'stream' && (
             <div className="grid gap-4 xl:grid-cols-[0.88fr_1.12fr]">
-              <div className="space-y-4">
+              <div className="min-w-0 space-y-4">
                 <section className="surface-panel p-4 sm:p-5">
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div className="space-y-3">
@@ -479,19 +479,19 @@ const AdminDashboard = () => {
                   </div>
 
                   <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                    <div className="rounded-2xl border border-primary/10 bg-white/70 p-4">
+                    <div className="min-w-0 rounded-2xl border border-primary/10 bg-white/70 p-4">
                       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Live Title</p>
                       <p className="mt-2 line-clamp-2 font-semibold text-foreground">{settings?.stream_title || 'No stream title yet'}</p>
                     </div>
-                    <div className="rounded-2xl border border-primary/10 bg-white/70 p-4">
+                    <div className="min-w-0 rounded-2xl border border-primary/10 bg-white/70 p-4">
                       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Last API Check</p>
-                      <p className="mt-2 font-semibold text-foreground">
+                      <p className="mt-2 break-words font-semibold text-foreground">
                         {settings?.last_api_check_time ? new Date(settings.last_api_check_time).toLocaleString() : 'Not checked yet'}
                       </p>
                     </div>
-                    <div className="rounded-2xl border border-primary/10 bg-white/70 p-4">
+                    <div className="min-w-0 rounded-2xl border border-primary/10 bg-white/70 p-4">
                       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Manual URL</p>
-                      <p className="mt-2 truncate font-semibold text-foreground">{settings?.youtube_url || 'Not set'}</p>
+                      <p className="mt-2 overflow-hidden text-ellipsis whitespace-nowrap font-semibold text-foreground">{settings?.youtube_url || 'Not set'}</p>
                     </div>
                   </div>
 
@@ -519,11 +519,11 @@ const AdminDashboard = () => {
 
                 <section className="surface-panel p-4 sm:p-5">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/80">Tracked URL</p>
-                  <p className="mt-2 break-all text-sm text-foreground">{settings?.youtube_url || 'No YouTube URL configured.'}</p>
+                  <p className="mt-2 overflow-hidden text-ellipsis whitespace-nowrap text-sm text-foreground">{settings?.youtube_url || 'No YouTube URL configured.'}</p>
                 </section>
               </div>
 
-              <Card className="surface-panel border-none shadow-none">
+              <Card className="surface-panel min-w-0 border-none shadow-none">
                 <CardHeader className="pb-3">
                   <div className="space-y-2">
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/80">Automation</p>
@@ -532,35 +532,35 @@ const AdminDashboard = () => {
                 </CardHeader>
                 <CardContent className="space-y-5">
                   <div className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-2">
+                    <div className="min-w-0 space-y-2">
                       <Label>YouTube Channel ID</Label>
-                      <Input value={channelId} onChange={(e) => setChannelId(e.target.value)} placeholder="UCxxxxxxx" className="h-11 bg-white/80" />
+                      <Input value={channelId} onChange={(e) => setChannelId(e.target.value)} placeholder="UCxxxxxxx" className="h-11 min-w-0 bg-white/80" />
                     </div>
-                    <div className="space-y-2">
+                    <div className="min-w-0 space-y-2">
                       <Label>Manual YouTube URL</Label>
-                      <Input value={manualUrl} onChange={(e) => setManualUrl(e.target.value)} placeholder="https://youtube.com/watch?v=..." className="h-11 bg-white/80" />
+                      <Input value={manualUrl} onChange={(e) => setManualUrl(e.target.value)} placeholder="https://youtube.com/watch?v=..." className="h-11 min-w-0 bg-white/80" />
                     </div>
-                    <div className="space-y-2">
+                    <div className="min-w-0 space-y-2">
                       <Label>Check Day</Label>
-                      <select value={checkDay} onChange={(e) => setCheckDay(e.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-white/80 px-3 text-sm">
+                      <select value={checkDay} onChange={(e) => setCheckDay(e.target.value)} className="flex h-11 w-full min-w-0 rounded-xl border border-input bg-white/80 px-3 text-sm">
                         {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map((day) => <option key={day}>{day}</option>)}
                       </select>
                     </div>
-                    <div className="space-y-2">
+                    <div className="min-w-0 space-y-2">
                       <Label>Check Interval (mins)</Label>
-                      <Input type="number" value={checkInterval} onChange={(e) => setCheckInterval(Number(e.target.value))} min={1} max={60} className="h-11 bg-white/80" />
+                      <Input type="number" value={checkInterval} onChange={(e) => setCheckInterval(Number(e.target.value))} min={1} max={60} className="h-11 min-w-0 bg-white/80" />
                     </div>
-                    <div className="space-y-2">
+                    <div className="min-w-0 space-y-2">
                       <Label>Start Time</Label>
-                      <Input type="time" value={checkStart} onChange={(e) => setCheckStart(e.target.value)} className="h-11 bg-white/80" />
+                      <Input type="time" value={checkStart} onChange={(e) => setCheckStart(e.target.value)} className="h-11 min-w-0 bg-white/80" />
                     </div>
-                    <div className="space-y-2">
+                    <div className="min-w-0 space-y-2">
                       <Label>End Time</Label>
-                      <Input type="time" value={checkEnd} onChange={(e) => setCheckEnd(e.target.value)} className="h-11 bg-white/80" />
+                      <Input type="time" value={checkEnd} onChange={(e) => setCheckEnd(e.target.value)} className="h-11 min-w-0 bg-white/80" />
                     </div>
-                    <div className="space-y-2 md:col-span-2">
+                    <div className="min-w-0 space-y-2 md:col-span-2">
                       <Label>Auto Duration (hours)</Label>
-                      <Input type="number" value={autoDuration} onChange={(e) => setAutoDuration(Number(e.target.value))} min={1} max={12} className="h-11 bg-white/80" />
+                      <Input type="number" value={autoDuration} onChange={(e) => setAutoDuration(Number(e.target.value))} min={1} max={12} className="h-11 min-w-0 bg-white/80" />
                     </div>
                   </div>
 
