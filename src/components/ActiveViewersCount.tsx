@@ -29,10 +29,21 @@ const ActiveViewersCount = ({ branchId, compact = false, iconOnly = false }: { b
   });
 
   useEffect(() => {
+    const handleRefresh = (event: Event) => {
+      const detail = (event as CustomEvent<{ branchId?: string }>).detail;
+      if (!detail?.branchId || !branchId || detail.branchId === branchId) {
+        fetchCount();
+      }
+    };
+
     fetchCount();
-    intervalRef.current = setInterval(fetchCount, 30000);
-    return () => clearInterval(intervalRef.current);
-  }, [fetchCount]);
+    intervalRef.current = setInterval(fetchCount, 5000);
+    window.addEventListener('active-viewers:refresh', handleRefresh as EventListener);
+    return () => {
+      clearInterval(intervalRef.current);
+      window.removeEventListener('active-viewers:refresh', handleRefresh as EventListener);
+    };
+  }, [branchId, fetchCount]);
 
   return (
     <>

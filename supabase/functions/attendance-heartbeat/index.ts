@@ -137,7 +137,7 @@ Deno.serve(async (req) => {
           stream_session_id: resumable.stream_session_id,
           start_time: resumable.start_time,
           duration_seconds: durationSeconds,
-          resumed_from_another_device: !existing && resumable.stream_session_id !== stream_session_id,
+          resumed_from_another_device: !existing && wasActive && resumable.stream_session_id !== stream_session_id,
         },
         stream: {
           youtube_url: settings?.youtube_url || '',
@@ -231,7 +231,7 @@ Deno.serve(async (req) => {
               stream_session_id: conflicted.stream_session_id,
               start_time: conflicted.start_time,
               duration_seconds: durationSeconds,
-              resumed_from_another_device: true,
+              resumed_from_another_device: wasActive,
             },
             stream: {
               youtube_url: settings?.youtube_url || '',

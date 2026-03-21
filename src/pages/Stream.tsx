@@ -125,6 +125,8 @@ const Stream = () => {
 
       if (response?.attendance?.resumed_from_another_device) {
         setDuplicateSessionNotice(true);
+      } else {
+        setDuplicateSessionNotice(false);
       }
 
       if (response?.attendance && session) {
@@ -139,6 +141,10 @@ const Stream = () => {
           setSession(nextSession);
         }
       }
+
+      window.dispatchEvent(new CustomEvent('active-viewers:refresh', {
+        detail: { branchId: session.branch_id },
+      }));
     } catch {
       if (!hasShownError.current) {
         toast.error('Unable to sync stream status right now.');

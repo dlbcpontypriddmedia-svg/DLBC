@@ -52,6 +52,22 @@ const ActiveViewersDialog = ({ open, onOpenChange, branchId }: ActiveViewersDial
     void fetchMembers();
   }, [fetchMembers, open]);
 
+  useEffect(() => {
+    if (!open) return;
+
+    const handleRefresh = (event: Event) => {
+      const detail = (event as CustomEvent<{ branchId?: string }>).detail;
+      if (!detail?.branchId || !branchId || detail.branchId === branchId) {
+        void fetchMembers();
+      }
+    };
+
+    window.addEventListener('active-viewers:refresh', handleRefresh as EventListener);
+    return () => {
+      window.removeEventListener('active-viewers:refresh', handleRefresh as EventListener);
+    };
+  }, [branchId, fetchMembers, open]);
+
   useRealtimeRefresh({
     subscriptions,
     onRefresh: () => {
