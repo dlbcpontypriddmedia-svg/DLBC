@@ -12,7 +12,6 @@ import StreamModeSelection from '@/components/stream/StreamModeSelection';
 import { Button } from '@/components/ui/button';
 import { useStreamAttendance } from '@/hooks/useStreamAttendance';
 import { useStreamMode } from '@/hooks/useStreamMode';
-import { useStreamPresenceNotifications } from '@/hooks/useStreamPresenceNotifications';
 import { useYouTubePlayer } from '@/hooks/useYouTubePlayer';
 import { clearViewerSession } from '@/lib/session';
 import { formatStreamTime, getVideoId } from '@/lib/stream';
@@ -41,11 +40,6 @@ const Stream = () => {
     toggleMute,
     toggleFullscreen,
   } = useYouTubePlayer({ audioOnly, videoId });
-
-  useStreamPresenceNotifications({
-    branchId: session?.branch_id,
-    currentSessionId: session?.stream_session_id,
-  });
 
   useEffect(() => {
     if (!session) {

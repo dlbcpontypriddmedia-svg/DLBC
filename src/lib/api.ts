@@ -1,7 +1,6 @@
 import { clearAuthToken, getAuthToken, saveAuthToken } from './session';
 
-const PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-const BASE = `https://${PROJECT_ID}.supabase.co/functions/v1`;
+import { getSupabaseFunctionsBaseUrl } from './config';
 
 async function call(
   fn: string,
@@ -9,6 +8,7 @@ async function call(
   method = 'POST',
   options?: { credentials?: RequestCredentials },
 ) {
+  const BASE = getSupabaseFunctionsBaseUrl();
   const opts: RequestInit = {
     method,
     headers: { 'Content-Type': 'application/json' },
@@ -24,7 +24,7 @@ async function call(
     ? `${BASE}/${fn}?${new URLSearchParams(body as Record<string, string>)}`
     : `${BASE}/${fn}`;
 
-  const res = await fetch(method === 'GET' ? url : `${BASE}/${fn}`, opts);
+  const res = await fetch(url, opts);
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Request failed');
   return data;
@@ -66,6 +66,7 @@ export const api = {
   sendLeaveHeartbeat: (data: Record<string, unknown>) => {
     if (typeof navigator === 'undefined' || typeof navigator.sendBeacon !== 'function') return false;
 
+    const BASE = getSupabaseFunctionsBaseUrl();
     const blob = new Blob([JSON.stringify({ ...data, presence_event: 'leave' })], {
       type: 'application/json',
     });
