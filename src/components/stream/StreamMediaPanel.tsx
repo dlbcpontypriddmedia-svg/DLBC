@@ -13,7 +13,7 @@ type Props = {
 
 export default function StreamMediaPanel({
   audioOnly,
-  streamActive,
+  streamActive: _streamActive,
   videoId,
   playerHostRef,
   videoShellRef,
@@ -23,16 +23,6 @@ export default function StreamMediaPanel({
       ref={videoShellRef}
       className={`relative overflow-hidden rounded-[1.5rem] border border-primary/10 bg-slate-950 shadow-[0_30px_70px_-40px_rgba(0,0,0,0.9)] ${audioOnly ? 'min-h-[14rem]' : 'aspect-video'}`}
     >
-      <div className="absolute left-4 top-4 z-10 flex flex-wrap items-center gap-2">
-        <span className={`inline-flex rounded-full border px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] backdrop-blur-sm sm:px-3 sm:text-[11px] sm:tracking-[0.22em] ${
-          streamActive
-            ? 'border-emerald-300/50 bg-emerald-400/15 text-emerald-50'
-            : 'border-white/15 bg-black/35 text-slate-100'
-        }`}>
-          {streamActive ? 'Attendance Active' : 'Waiting for service'}
-        </span>
-      </div>
-
       {audioOnly ? (
         <div className="flex h-full min-h-[14rem] items-center justify-center px-6 py-10 text-center text-white">
           <div className="w-full max-w-xl space-y-5">

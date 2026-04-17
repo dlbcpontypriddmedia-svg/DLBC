@@ -99,6 +99,17 @@ const Stream = () => {
             <section className="space-y-4">
               <div className="space-y-2">
                 <h1 className="text-2xl font-semibold leading-snug text-foreground md:text-3xl">{streamTitle}</h1>
+                <div className="flex flex-wrap items-center justify-center gap-2 md:justify-start">
+                  <span
+                    className={`inline-flex rounded-full border px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${
+                      streamActive
+                        ? 'border-emerald-300/50 bg-emerald-400/10 text-emerald-900'
+                        : 'border-border bg-muted/40 text-muted-foreground'
+                    }`}
+                  >
+                    {streamActive ? 'Attendance Active' : 'Waiting for service'}
+                  </span>
+                </div>
               </div>
 
               <div className="flex flex-wrap items-center justify-center gap-2">
