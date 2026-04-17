@@ -31,7 +31,7 @@ const AdminLogin = () => {
 
   return (
     <div className="page-shell flex min-h-screen items-center justify-center px-4 py-10">
-      <Card className="surface-panel w-full max-w-xl border-none shadow-none">
+      <Card className="surface-panel w-full max-w-2xl border-none shadow-none">
         <CardContent className="p-8 md:p-10">
           <div className="mb-8 flex flex-col items-center gap-4 text-center">
             <Logo />

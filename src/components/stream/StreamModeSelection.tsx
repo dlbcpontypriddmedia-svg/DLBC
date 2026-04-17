@@ -12,7 +12,7 @@ type Props = {
 export default function StreamModeSelection({ session, onSelectMode }: Props) {
   return (
     <div className="page-shell min-h-screen px-4 py-4 md:px-6 md:py-6">
-      <div className="mx-auto flex max-w-4xl flex-col gap-4">
+      <div className="mx-auto flex max-w-5xl flex-col gap-4">
         <header className="surface-panel flex flex-col gap-4 px-5 py-4 md:flex-row md:items-center md:justify-between">
           <Logo />
           <div className="rounded-full border border-primary/10 bg-primary/[0.03] px-3 py-1.5 text-sm font-medium text-foreground">

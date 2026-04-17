@@ -43,7 +43,7 @@ const ActiveViewersDialog = ({ open, onOpenChange, branchId }: ActiveViewersDial
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-xl rounded-[1.75rem] border border-white/50 bg-white/65 p-0 shadow-[0_24px_80px_rgba(15,23,42,0.18)] backdrop-blur-xl"
+        className="max-w-2xl rounded-[1.75rem] border border-white/50 bg-white/65 p-0 shadow-[0_24px_80px_rgba(15,23,42,0.18)] backdrop-blur-xl"
         overlayClassName="bg-slate-950/12 backdrop-blur-[1px]"
       >
         <DialogHeader className="border-b border-white/45 px-6 py-5">

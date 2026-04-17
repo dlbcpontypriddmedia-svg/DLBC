@@ -153,7 +153,7 @@ const AttendanceDashboard = () => {
 
   return (
     <div className="page-shell min-h-screen px-4 py-4 md:px-6 md:py-6">
-      <div className="mx-auto flex min-h-[calc(100vh-2rem)] max-w-6xl flex-col gap-4">
+      <div className="mx-auto flex min-h-[calc(100vh-2rem)] max-w-7xl flex-col gap-4">
         <header className="surface-panel flex flex-col gap-4 px-5 py-4 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-wrap items-center gap-4">
             <Logo />
