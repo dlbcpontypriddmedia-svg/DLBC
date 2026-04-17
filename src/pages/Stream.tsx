@@ -70,21 +70,21 @@ const Stream = () => {
               onClick={handleLeave}
               disabled={leaving}
               aria-label="Leave stream"
-              className="shrink-0"
+              className="shrink-0 rounded-xl"
             >
               {leaving ? <LoadingSpinner size="sm" className="text-current" /> : <LogOut className="h-4 w-4" />}
             </Button>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/10 bg-white/75 px-3 py-2 text-sm text-muted-foreground">
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
+            <div className="inline-flex items-center gap-2 rounded-xl border border-primary/10 bg-white/75 px-3 py-2 text-sm text-muted-foreground shadow-sm">
               <Clock3 className="h-4 w-4 text-primary" />
               <span className="tabular-nums font-semibold text-foreground">{formatStreamTime(elapsed)}</span>
             </div>
-            <div className="rounded-full border border-primary/10 bg-primary/[0.03] px-3 py-2 text-sm font-medium text-foreground">
+            <div className="inline-flex items-center rounded-xl border border-primary/10 bg-primary/[0.03] px-3 py-2 text-sm font-medium text-foreground shadow-sm">
               {session.branch} Branch
             </div>
-            <ActiveViewersCount branchId={session.branch_id} iconOnly />
+            <ActiveViewersCount branchId={session.branch_id} iconOnly className="col-span-2 sm:col-span-1" />
           </div>
         </header>
 
