@@ -61,22 +61,30 @@ const Stream = () => {
   return (
     <div className="page-shell min-h-screen px-3 py-4 sm:px-4 md:px-6 md:py-6">
       <div className="mx-auto flex max-w-7xl flex-col gap-4">
-        <header className="surface-panel flex flex-col gap-4 px-4 py-4 sm:px-5 md:flex-row md:items-center md:justify-between">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
-            <Logo />
-            <div className="inline-flex w-fit items-center gap-2 rounded-full border border-primary/10 bg-white/75 px-3 py-2 text-sm text-muted-foreground">
+        <header className="surface-panel flex flex-col gap-3 px-4 py-4 sm:px-5">
+          <div className="flex items-start justify-between gap-3">
+            <Logo className="min-w-0" />
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleLeave}
+              disabled={leaving}
+              aria-label="Leave stream"
+              className="shrink-0"
+            >
+              {leaving ? <LoadingSpinner size="sm" className="text-current" /> : <LogOut className="h-4 w-4" />}
+            </Button>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/10 bg-white/75 px-3 py-2 text-sm text-muted-foreground">
               <Clock3 className="h-4 w-4 text-primary" />
               <span className="tabular-nums font-semibold text-foreground">{formatStreamTime(elapsed)}</span>
             </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="rounded-full border border-primary/10 bg-primary/[0.03] px-3 py-1.5 text-sm font-medium text-foreground">
+            <div className="rounded-full border border-primary/10 bg-primary/[0.03] px-3 py-2 text-sm font-medium text-foreground">
               {session.branch} Branch
             </div>
             <ActiveViewersCount branchId={session.branch_id} iconOnly />
-            <Button variant="outline" size="icon" onClick={handleLeave} disabled={leaving} aria-label="Leave stream">
-              {leaving ? <LoadingSpinner size="sm" className="text-current" /> : <LogOut className="h-4 w-4" />}
-            </Button>
           </div>
         </header>
 
