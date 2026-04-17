@@ -80,59 +80,66 @@ const Stream = () => {
           </div>
         </header>
 
-        <main className="rounded-[1.5rem] border border-white/70 bg-transparent p-4 md:p-6">
+        <main className="surface-panel p-4 md:p-6">
           {duplicateSessionNotice && (
             <div className="mb-4 rounded-[1.25rem] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
               This attendance session was already active on another device. You have been connected to the same live attendance record.
             </div>
           )}
 
-          <StreamMediaPanel
-            audioOnly={audioOnly}
-            streamActive={streamActive}
-            videoId={videoId}
-            playerHostRef={playerHostRef}
-            videoShellRef={videoShellRef}
-          />
+          <div className="grid gap-5 md:grid-cols-3 md:gap-6">
+            <div className="md:col-span-2">
+              <StreamMediaPanel
+                audioOnly={audioOnly}
+                streamActive={streamActive}
+                videoId={videoId}
+                playerHostRef={playerHostRef}
+                videoShellRef={videoShellRef}
+              />
+            </div>
 
-          <div className="mt-5 space-y-4">
-            <section className="space-y-4">
-              <div className="space-y-2">
-                <h1 className="text-2xl font-semibold leading-snug text-foreground md:text-3xl">{streamTitle}</h1>
-                <div className="flex flex-wrap items-center justify-center gap-2 md:justify-start">
-                  <span
-                    className={`inline-flex rounded-full border px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${
-                      streamActive
-                        ? 'border-emerald-300/50 bg-emerald-400/10 text-emerald-900'
-                        : 'border-border bg-muted/40 text-muted-foreground'
-                    }`}
-                  >
-                    {streamActive ? 'Attendance Active' : 'Waiting for service'}
-                  </span>
+            <aside className="space-y-4 md:col-span-1">
+              <section className="rounded-[1.25rem] border border-primary/10 bg-white/80 p-4 shadow-sm backdrop-blur">
+                <div className="space-y-2">
+                  <h1 className="text-xl font-semibold leading-snug text-foreground md:text-2xl">{streamTitle}</h1>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span
+                      className={`inline-flex rounded-full border px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${
+                        streamActive
+                          ? 'border-emerald-300/50 bg-emerald-400/10 text-emerald-900'
+                          : 'border-border bg-muted/40 text-muted-foreground'
+                      }`}
+                    >
+                      {streamActive ? 'Attendance Active' : 'Waiting for service'}
+                    </span>
+                    <span className="rounded-full border border-primary/10 bg-primary/[0.03] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground">
+                      {audioOnly ? 'Audio' : 'Video'}
+                    </span>
+                  </div>
                 </div>
-              </div>
 
-              <div className="flex flex-wrap items-center justify-center gap-2">
-                <Button variant="outline" size="sm" onClick={togglePlay} disabled={!videoId || audioOnly}>
-                  {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                  {isPlaying ? 'Pause' : 'Play'}
-                </Button>
-                <Button variant="outline" size="sm" onClick={toggleMute} disabled={!videoId || audioOnly}>
-                  {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-                  {isMuted ? 'Unmute' : 'Mute'}
-                </Button>
-                <Button variant="outline" size="sm" onClick={toggleFullscreen} disabled={!videoId || audioOnly}>
-                  <Maximize className="h-4 w-4" />
-                  Fullscreen
-                </Button>
-                <Button variant="outline" size="sm" onClick={toggleMode}>
-                  <MonitorPlay className="h-4 w-4" />
-                  {audioOnly ? 'Audio' : 'Video'}
-                </Button>
-              </div>
+                <div className="mt-4 flex flex-wrap items-center gap-2">
+                  <Button variant="outline" size="sm" onClick={togglePlay} disabled={!videoId || audioOnly}>
+                    {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                    {isPlaying ? 'Pause' : 'Play'}
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={toggleMute} disabled={!videoId || audioOnly}>
+                    {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                    {isMuted ? 'Unmute' : 'Mute'}
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={toggleFullscreen} disabled={!videoId || audioOnly}>
+                    <Maximize className="h-4 w-4" />
+                    Fullscreen
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={toggleMode}>
+                    <MonitorPlay className="h-4 w-4" />
+                    Switch
+                  </Button>
+                </div>
+              </section>
 
               <AttendeeInfoCard session={session} />
-            </section>
+            </aside>
           </div>
         </main>
       </div>
