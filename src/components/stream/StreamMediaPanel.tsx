@@ -1,5 +1,5 @@
 import { RadioTower, Volume2 } from 'lucide-react';
-import type { RefObject } from 'react';
+import type { Ref, RefObject } from 'react';
 
 import { AUDIO_STREAM_URL } from '@/lib/stream';
 
@@ -7,7 +7,7 @@ type Props = {
   audioOnly: boolean;
   streamActive: boolean;
   videoId: string | null;
-  playerHostRef: RefObject<HTMLDivElement>;
+  playerHostRef: Ref<HTMLDivElement>;
   videoShellRef: RefObject<HTMLDivElement>;
 };
 

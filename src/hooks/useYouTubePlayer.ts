@@ -77,6 +77,20 @@ export function useYouTubePlayer({ audioOnly, videoId }: Options) {
     });
   }, [syncPlayerState]);
 
+  const setPlayerHostRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      playerHostRef.current = node;
+
+      if (!node) return;
+      if (audioOnly || !videoId) return;
+      if (!window.YT?.Player) return;
+      if (playerRef.current) return;
+
+      initializePlayer(videoId);
+    },
+    [audioOnly, initializePlayer, videoId],
+  );
+
   useEffect(() => {
     if (audioOnly || !videoId) {
       playerRef.current?.destroy();
@@ -160,7 +174,7 @@ export function useYouTubePlayer({ audioOnly, videoId }: Options) {
   }, []);
 
   return {
-    playerHostRef,
+    playerHostRef: setPlayerHostRef,
     videoShellRef,
     isPlaying,
     isMuted,
