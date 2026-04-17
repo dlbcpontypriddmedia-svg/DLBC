@@ -59,9 +59,9 @@ const Stream = () => {
   if (!modeSelected) return <StreamModeSelection session={session} onSelectMode={selectMode} />;
 
   return (
-    <div className="page-shell min-h-screen px-4 py-4 md:px-6 md:py-6">
+    <div className="page-shell min-h-screen px-3 py-4 sm:px-4 md:px-6 md:py-6">
       <div className="mx-auto flex max-w-7xl flex-col gap-4">
-        <header className="surface-panel flex flex-col gap-4 px-5 py-4 md:flex-row md:items-center md:justify-between">
+        <header className="surface-panel flex flex-col gap-4 px-4 py-4 sm:px-5 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
             <Logo />
             <div className="inline-flex w-fit items-center gap-2 rounded-full border border-primary/10 bg-white/75 px-3 py-2 text-sm text-muted-foreground">
@@ -80,7 +80,7 @@ const Stream = () => {
           </div>
         </header>
 
-        <main className="surface-panel p-4 md:p-6">
+        <main className="surface-panel p-3 sm:p-4 md:p-6">
           {duplicateSessionNotice && (
             <div className="mb-4 rounded-[1.25rem] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
               This attendance session was already active on another device. You have been connected to the same live attendance record.
