@@ -38,6 +38,12 @@
 
     --success: 152 60% 36%;
     --success-foreground: 0 0% 100%;
+
+    /* Brand navy gradient stops — keep in sync across auth panels */
+    --brand-navy-1: #0b2347;
+    --brand-navy-2: #0f3568;
+    --brand-navy-3: #133d7a;
+    --brand-navy-4: #0e2d5a;
   }
 }
 
@@ -57,16 +63,20 @@
 }
 
 @layer components {
+  /* ─── Shared brand gradient (auth panels + mobile header) ─── */
+  .brand-gradient {
+    background: linear-gradient(160deg, var(--brand-navy-1) 0%, var(--brand-navy-2) 40%, var(--brand-navy-3) 70%, var(--brand-navy-4) 100%);
+  }
+
   /* ─── Auth split-screen shell ─── */
   .auth-shell {
-    /* Stack on mobile, side-by-side on desktop */
     @apply flex flex-col lg:flex-row min-h-screen;
   }
 
   /* Left branded dark panel — only on desktop */
   .auth-brand-panel {
     @apply hidden lg:flex lg:w-[42%] xl:w-[38%] flex-col items-center justify-center relative overflow-hidden px-12;
-    background: linear-gradient(160deg, #0b2347 0%, #0f3568 40%, #133d7a 70%, #0e2d5a 100%);
+    background: linear-gradient(160deg, var(--brand-navy-1) 0%, var(--brand-navy-2) 40%, var(--brand-navy-3) 70%, var(--brand-navy-4) 100%);
   }
 
   .auth-brand-panel::before {
@@ -85,11 +95,13 @@
     background-size: 40px 40px;
   }
 
-  /* Right form panel */
+  /* Right form panel
+     — On mobile: top-aligned with generous padding so long forms (Family type)
+       scroll naturally with the document rather than clipping.
+     — On desktop: vertically centered with lg:justify-center. */
   .auth-form-panel {
-    @apply flex flex-1 flex-col items-center justify-center bg-white;
-    /* Mobile: comfortable padding; desktop: generous */
-    @apply px-5 py-8 sm:px-8 sm:py-10;
+    @apply flex flex-1 flex-col items-center bg-white;
+    @apply px-5 pt-8 pb-12 sm:px-8 sm:pt-10 sm:pb-14 lg:justify-center lg:py-0;
   }
 
   /* ─── Dashboard layout ─── */
@@ -124,7 +136,7 @@
   }
 
   .tab-btn {
-    @apply flex-1 rounded-xl px-2 py-2.5 text-sm font-semibold transition-all text-muted-foreground hover:text-foreground;
+    @apply flex-1 rounded-xl px-2 py-2 text-xs font-semibold transition-all text-muted-foreground hover:text-foreground sm:py-2.5 sm:text-sm;
   }
 
   .tab-btn.active {

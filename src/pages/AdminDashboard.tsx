@@ -195,9 +195,9 @@ const AdminDashboard = () => {
         {/* ── Tabs ── */}
         <div className="tab-bar">
           {TABS.map(({ id, label, icon: Icon }) => (
-            <button key={id} onClick={() => setActiveTab(id)} className={`tab-btn flex items-center justify-center gap-1.5 ${activeTab === id ? 'active' : ''}`}>
+            <button key={id} onClick={() => setActiveTab(id)} className={`tab-btn flex flex-col items-center justify-center gap-1 sm:flex-row sm:gap-1.5 ${activeTab === id ? 'active' : ''}`}>
               <Icon className="h-4 w-4 shrink-0" />
-              <span className="hidden sm:inline">{label}</span>
+              <span className="text-[10px] sm:text-sm">{label}</span>
             </button>
           ))}
         </div>
@@ -315,7 +315,7 @@ const AdminDashboard = () => {
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:flex md:flex-wrap md:items-end md:gap-2">
                   <div className="space-y-1">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">Service</p>
-                    <select value={filterTitle} onChange={(e) => setFilterTitle(e.target.value)} className="h-9 w-full rounded-lg border border-input bg-muted/40 px-3 text-sm md:w-auto md:min-w-[10rem]">
+                    <select value={filterTitle} onChange={(e) => setFilterTitle(e.target.value)} className="h-9 w-full rounded-xl border border-input bg-muted/40 px-3 text-sm md:w-auto md:min-w-[10rem]">
                       <option value="">All services</option>
                       {titles.map((t) => <option key={t} value={t}>{t}</option>)}
                     </select>
