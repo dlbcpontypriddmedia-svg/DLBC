@@ -35,10 +35,6 @@ const getInitials = (value?: string | null) => (value ?? '')
   .slice(0, 2)
   .map((part) => part[0]?.toUpperCase() || '')
   .join('') || 'AV';
-  .filter(Boolean)
-  .slice(0, 2)
-  .map((part) => part[0]?.toUpperCase() || '')
-  .join('') || 'AV';
 
 const ActiveViewersDialog = ({ open, onOpenChange, branchId }: ActiveViewersDialogProps) => {
   const { members, hasLoaded } = useActiveViewers(branchId);
