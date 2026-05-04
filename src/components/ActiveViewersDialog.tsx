@@ -23,14 +23,18 @@ const sortMembers = (members: ActiveViewerMember[]) => [...members].sort((left, 
   const branchCompare = (left.branch_name || '').localeCompare(right.branch_name || '');
   if (branchCompare !== 0) return branchCompare;
 
-  const nameCompare = left.display_name.localeCompare(right.display_name);
+  const nameCompare = (left.display_name ?? '').localeCompare(right.display_name ?? '');
   if (nameCompare !== 0) return nameCompare;
 
   return left.stream_session_id.localeCompare(right.stream_session_id);
 });
 
-const getInitials = (value: string) => value
+const getInitials = (value?: string | null) => (value ?? '')
   .split(/\s+/)
+  .filter(Boolean)
+  .slice(0, 2)
+  .map((part) => part[0]?.toUpperCase() || '')
+  .join('') || 'AV';
   .filter(Boolean)
   .slice(0, 2)
   .map((part) => part[0]?.toUpperCase() || '')
@@ -84,7 +88,9 @@ const ActiveViewersDialog = ({ open, onOpenChange, branchId }: ActiveViewersDial
                     </Avatar>
 
                     <div className="min-w-0">
-                      <p className="truncate font-medium text-foreground">{member.display_name}</p>
+                      <p className="truncate font-medium text-foreground">
+  {member.display_name || 'Anonymous Viewer'}
+</p>
                       {!branchId && member.branch_name ? (
                         <p className="mt-1 text-xs uppercase tracking-[0.18em] text-muted-foreground">
                           {member.branch_name}
