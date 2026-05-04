@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { api } from '@/lib/api';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Branch { id: string; name: string; }
 
@@ -16,17 +16,20 @@ const BranchSelector = ({ value, onChange, className = '' }: Props) => {
 
   useEffect(() => {
     let active = true;
-    api.getPublicBranches().then(res => {
-      if (!active) return;
-      setBranches(res.branches || []);
-      setError('');
-    }).catch(() => {
-      if (!active) return;
-      setError('Unable to load branches');
-    }).finally(() => {
-      if (!active) return;
-      setLoading(false);
-    });
+    supabase
+      .from('branches')
+      .select('id, name')
+      .order('name', { ascending: true })
+      .then(({ data, error }) => {
+        if (!active) return;
+        if (error) {
+          setError('Unable to load branches');
+        } else {
+          setBranches(data || []);
+          setError('');
+        }
+        setLoading(false);
+      });
     return () => { active = false; };
   }, []);
 

@@ -1,6 +1,5 @@
 import { clearAuthToken, getAuthToken, saveAuthToken } from './session';
-
-import { getSupabaseFunctionsBaseUrl } from './config';
+import { getSupabaseFunctionsBaseUrl, isDevDirectMode, SUPABASE_ANON_KEY } from './config';
 
 async function call(
   fn: string,
@@ -9,15 +8,25 @@ async function call(
   options?: { credentials?: RequestCredentials },
 ) {
   const BASE = getSupabaseFunctionsBaseUrl();
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+
+  // When calling Supabase Edge Functions directly in dev, supply the anon key.
+  if (isDevDirectMode() && SUPABASE_ANON_KEY) {
+    headers['apikey'] = SUPABASE_ANON_KEY;
+    headers['Authorization'] = `Bearer ${SUPABASE_ANON_KEY}`;
+  }
+
+  const token = getAuthToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
   const opts: RequestInit = {
     method,
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     credentials: options?.credentials ?? 'include',
   };
-  const token = getAuthToken();
-  if (token && opts.headers) {
-    (opts.headers as Record<string, string>).Authorization = `Bearer ${token}`;
-  }
+
   if (body && method !== 'GET') opts.body = JSON.stringify(body);
 
   const url = method === 'GET' && body
