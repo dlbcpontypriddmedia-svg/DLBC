@@ -5,20 +5,11 @@ function env(name: string): string | undefined {
 
 export const SUPABASE_URL = env('VITE_SUPABASE_URL');
 export const SUPABASE_PROJECT_ID = env('VITE_SUPABASE_PROJECT_ID');
+export const API_BASE_URL = env('VITE_API_BASE_URL');
 
 export function getSupabaseFunctionsBaseUrl(): string {
-  const base = SUPABASE_URL
-    ? `${SUPABASE_URL.replace(/\/+$/, '')}/functions/v1`
-    : SUPABASE_PROJECT_ID
-      ? `https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1`
-      : undefined;
-
-  if (!base) {
-    throw new Error(
-      'Missing Supabase config. Set VITE_SUPABASE_URL (preferred) or VITE_SUPABASE_PROJECT_ID in your env.',
-    );
-  }
-
+  // Standard deployment: privileged API runs on the same origin as the frontend (Vercel serverless routes).
+  // You can override for local/multi-origin setups with VITE_API_BASE_URL.
+  const base = `${(API_BASE_URL || '').replace(/\/+$/, '')}/api`.replace(/^\/api/, '/api');
   return base;
 }
-

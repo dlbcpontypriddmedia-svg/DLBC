@@ -1,27 +1,6 @@
 project_id = "bdiianwkpalzcmgbffeg"
 
-[functions.admin-auth]
-verify_jwt = false
-
-[functions.staff-auth]
-verify_jwt = false
-
-[functions.auth-logout]
-verify_jwt = false
-
-[functions.admin-actions]
-verify_jwt = false
-
 [functions.attendance-heartbeat]
-verify_jwt = false
-
-[functions.attendance-data]
-verify_jwt = false
-
-[functions.active-viewers]
-verify_jwt = false
-
-[functions.public-branches]
 verify_jwt = false
 
 [functions.check-youtube-live]

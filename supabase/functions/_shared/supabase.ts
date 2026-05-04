@@ -1,9 +1,19 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
+function getProjectUrl(): string | undefined {
+  return Deno.env.get('PROJECT_URL') ?? Deno.env.get('SUPABASE_URL');
+}
+
+function getServiceRoleKey(): string | undefined {
+  return Deno.env.get('SERVICE_ROLE_KEY') ?? Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+}
+
 export function getServiceClient() {
+  const projectUrl = getProjectUrl();
+  const serviceRoleKey = getServiceRoleKey();
   return createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    projectUrl!,
+    serviceRoleKey!
   );
 }
 

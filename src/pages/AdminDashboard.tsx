@@ -80,6 +80,9 @@ const AdminDashboard = () => {
   const [manualUrl, setManualUrl] = useState('');
   const [newStaffBranch, setNewStaffBranch] = useState('');
   const [newStaffPassword, setNewStaffPassword] = useState('');
+  const [currentAdminPassword, setCurrentAdminPassword] = useState('');
+  const [newAdminPassword, setNewAdminPassword] = useState('');
+  const [updatingAdminPassword, setUpdatingAdminPassword] = useState(false);
   const [pendingConfirm, setPendingConfirm] = useState<PendingConfirm>(null);
   const [mergingBranch, setMergingBranch] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -122,6 +125,23 @@ const AdminDashboard = () => {
   const addStaff = async () => { if (!newStaffBranch || !newStaffPassword) return; setAddingStaff(true); try { await api.adminAction('create_staff', { branch_id: newStaffBranch, password: newStaffPassword }); setNewStaffPassword(''); toast.success('Staff account created.'); await fetchAll(); } catch (err) { toast.error(errMsg(err, 'Unable to create staff.')); } finally { setAddingStaff(false); } };
   const mergeBranch = async () => { if (!mergeSourceBranch || !mergeTargetBranch || mergeSourceBranch === mergeTargetBranch) return; setMergingBranch(true); try { const r = await api.adminAction('merge_branch', { source_branch_id: mergeSourceBranch, target_branch_id: mergeTargetBranch }); toast.success(`Merged ${r.merged_from} into ${r.merged_into}.`); setMergeSourceBranch(''); setMergeTargetBranch(''); await fetchAll(); } catch (err) { toast.error(errMsg(err, 'Unable to merge branches.')); } finally { setMergingBranch(false); } };
   const deleteStaff = async (id: string) => { setDeletingStaffId(id); try { await api.adminAction('delete_staff', { id }); toast.success('Staff deleted.'); await fetchAll(); } catch (err) { toast.error(errMsg(err, 'Unable to delete staff.')); } finally { setDeletingStaffId(null); } };
+  const updateAdminPassword = async () => {
+    if (!newAdminPassword) return;
+    setUpdatingAdminPassword(true);
+    try {
+      await api.adminAction('update_admin_password', {
+        current_password: currentAdminPassword || undefined,
+        new_password: newAdminPassword,
+      });
+      setCurrentAdminPassword('');
+      setNewAdminPassword('');
+      toast.success('Admin password updated.');
+    } catch (err) {
+      toast.error(errMsg(err, 'Unable to update admin password.'));
+    } finally {
+      setUpdatingAdminPassword(false);
+    }
+  };
 
   const fmt = (s: number) => { const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60); return h > 0 ? `${h}h ${m}m` : `${m}m`; };
   const totalWatch = records.reduce((s, r) => s + (r.duration_seconds || 0), 0);
@@ -471,26 +491,47 @@ const AdminDashboard = () => {
         {/* ── Staff tab ── */}
         {activeTab === 'staff' && (
           <div className="grid gap-5 xl:grid-cols-[1fr_1.3fr]">
-            <Card className="rounded-2xl border border-border/60 shadow-none">
-              <CardHeader className="pb-2"><CardTitle className="font-display text-lg md:text-xl">Add Staff Account</CardTitle></CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-1.5">
-                  <Label>Branch</Label>
-                  <select value={newStaffBranch} onChange={(e) => setNewStaffBranch(e.target.value)} className={sel}>
-                    <option value="">Select branch...</option>
-                    {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-                  </select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Staff Password</Label>
-                  <Input type="password" value={newStaffPassword} onChange={(e) => setNewStaffPassword(e.target.value)} placeholder="Enter password" className="h-10 bg-white" autoComplete="new-password" />
-                </div>
-                <Button onClick={addStaff} disabled={!newStaffBranch || !newStaffPassword || addingStaff}>
-                  {addingStaff ? <LoadingSpinner size="sm" className="text-current" /> : <Plus className="h-4 w-4" />}
-                  {addingStaff ? 'Creating...' : 'Add Staff'}
-                </Button>
-              </CardContent>
-            </Card>
+            <div className="grid gap-5">
+              <Card className="rounded-2xl border border-border/60 shadow-none">
+                <CardHeader className="pb-2"><CardTitle className="font-display text-lg md:text-xl">Add Staff Account</CardTitle></CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-1.5">
+                    <Label>Branch</Label>
+                    <select value={newStaffBranch} onChange={(e) => setNewStaffBranch(e.target.value)} className={sel}>
+                      <option value="">Select branch...</option>
+                      {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Staff Password</Label>
+                    <Input type="password" value={newStaffPassword} onChange={(e) => setNewStaffPassword(e.target.value)} placeholder="Enter password" className="h-10 bg-white" autoComplete="new-password" />
+                  </div>
+                  <Button onClick={addStaff} disabled={!newStaffBranch || !newStaffPassword || addingStaff}>
+                    {addingStaff ? <LoadingSpinner size="sm" className="text-current" /> : <Plus className="h-4 w-4" />}
+                    {addingStaff ? 'Creating...' : 'Add Staff'}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="rounded-2xl border border-border/60 shadow-none">
+                <CardHeader className="pb-2"><CardTitle className="font-display text-lg md:text-xl">Admin Password</CardTitle></CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-1.5">
+                    <Label>Current Password</Label>
+                    <Input type="password" value={currentAdminPassword} onChange={(e) => setCurrentAdminPassword(e.target.value)} placeholder="Enter current password" className="h-10 bg-white" autoComplete="current-password" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>New Password</Label>
+                    <Input type="password" value={newAdminPassword} onChange={(e) => setNewAdminPassword(e.target.value)} placeholder="Enter new password" className="h-10 bg-white" autoComplete="new-password" />
+                    <p className="text-xs text-muted-foreground">Use 10+ characters.</p>
+                  </div>
+                  <Button onClick={updateAdminPassword} disabled={!newAdminPassword || updatingAdminPassword}>
+                    {updatingAdminPassword ? <LoadingSpinner size="sm" className="text-current" /> : <Save className="h-4 w-4" />}
+                    {updatingAdminPassword ? 'Updating...' : 'Update Password'}
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
 
             <Card className="rounded-2xl border border-border/60 shadow-none">
               <CardHeader className="pb-2"><CardTitle className="font-display text-lg md:text-xl">Staff Accounts</CardTitle></CardHeader>
