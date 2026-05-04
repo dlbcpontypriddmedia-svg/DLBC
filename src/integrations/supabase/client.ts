@@ -3,14 +3,16 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './public-types';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+// Prefer the anon JWT key for the browser client (works universally across Supabase features, incl. Realtime).
+// Some projects also provide a "publishable" key; keep it as a fallback.
 const SUPABASE_PUBLISHABLE_KEY =
-  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? import.meta.env.VITE_SUPABASE_ANON_KEY;
+  import.meta.env.VITE_SUPABASE_ANON_KEY ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 if (!SUPABASE_URL || typeof SUPABASE_URL !== 'string') {
   throw new Error('Missing VITE_SUPABASE_URL in env.');
 }
 if (!SUPABASE_PUBLISHABLE_KEY || typeof SUPABASE_PUBLISHABLE_KEY !== 'string') {
-  throw new Error('Missing VITE_SUPABASE_PUBLISHABLE_KEY (or VITE_SUPABASE_ANON_KEY) in env.');
+  throw new Error('Missing VITE_SUPABASE_ANON_KEY (or VITE_SUPABASE_PUBLISHABLE_KEY) in env.');
 }
 
 // Import the supabase client like this:
