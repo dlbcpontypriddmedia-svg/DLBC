@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { applyCors, handleOptions } from './_shared/cors';
-import { requireSession } from './_shared/authz';
-import { getServiceClient } from './_shared/supabase';
+import { applyCors, handleOptions } from './_shared/cors.js';
+import { requireSession } from './_shared/authz.js';
+import { getServiceClient } from './_shared/supabase.js';
 
 const SETTINGS_ID = '8f42b1c3-5d9e-4a7b-b2e1-9c3f4d5a6e7b';
 
@@ -47,4 +47,3 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const titles = [...new Set((data || []).map((r: any) => r.stream_title))];
   return res.status(200).json({ records: data, settings, titles, role: session.role, branch_id: session.role === 'staff' ? session.branch_id : undefined });
 }
-

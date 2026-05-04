@@ -1,7 +1,7 @@
 import type { VercelRequest } from '@vercel/node';
-import { requiredEnv } from './env';
-import { getSessionToken } from './session';
-import { verifyJwt } from './jwt';
+import { requiredEnv } from './env.js';
+import { getSessionToken } from './session.js';
+import { verifyJwt } from './jwt.js';
 
 export type SessionPayload =
   | { role: 'admin'; exp?: number }
@@ -17,4 +17,3 @@ export function requireSession(req: VercelRequest): SessionPayload {
   if (payload.role === 'staff' && typeof payload.branch_id !== 'string') throw new Error('Unauthorized');
   return payload;
 }
-

@@ -1,10 +1,10 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import crypto from 'node:crypto';
-import { applyCors, handleOptions } from './_shared/cors';
-import { requiredEnv } from './_shared/env';
-import { signJwt } from './_shared/jwt';
-import { setAuthCookie } from './_shared/session';
-import { getServiceClient } from './_shared/supabase';
+import { applyCors, handleOptions } from './_shared/cors.js';
+import { requiredEnv } from './_shared/env.js';
+import { signJwt } from './_shared/jwt.js';
+import { setAuthCookie } from './_shared/session.js';
+import { getServiceClient } from './_shared/supabase.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (handleOptions(req, res)) return;
@@ -32,4 +32,3 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Set-Cookie', setAuthCookie(token));
   return res.status(200).json({ success: true, branch_id: staff.branch_id, token });
 }
-

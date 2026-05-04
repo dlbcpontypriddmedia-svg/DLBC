@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { applyCors, handleOptions } from './_shared/cors';
-import { getServiceClient } from './_shared/supabase';
+import { applyCors, handleOptions } from './_shared/cors.js';
+import { getServiceClient } from './_shared/supabase.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (handleOptions(req, res)) return;
@@ -35,4 +35,3 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     members: includeMembers ? records : undefined,
   });
 }
-

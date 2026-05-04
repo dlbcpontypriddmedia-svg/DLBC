@@ -1,10 +1,10 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import crypto from 'node:crypto';
-import { applyCors, handleOptions } from './_shared/cors';
-import { requireSession } from './_shared/authz';
-import { getServiceClient, sendRealtimeBroadcast } from './_shared/supabase';
-import { runYoutubeLiveCheck } from './_shared/youtube';
-import { hashPassword, verifyPassword } from './_shared/password';
+import { applyCors, handleOptions } from './_shared/cors.js';
+import { requireSession } from './_shared/authz.js';
+import { getServiceClient, sendRealtimeBroadcast } from './_shared/supabase.js';
+import { runYoutubeLiveCheck } from './_shared/youtube.js';
+import { hashPassword, verifyPassword } from './_shared/password.js';
 
 const SETTINGS_ID = '8f42b1c3-5d9e-4a7b-b2e1-9c3f4d5a6e7b';
 const DEFAULT_MANUAL_STREAM_TITLE = 'Deeper Life Bible Church';

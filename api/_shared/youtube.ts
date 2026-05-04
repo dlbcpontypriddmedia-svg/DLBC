@@ -1,5 +1,5 @@
-import { optionalEnv } from './env';
-import { getServiceClient, sendRealtimeBroadcast } from './supabase';
+import { optionalEnv } from './env.js';
+import { getServiceClient, sendRealtimeBroadcast } from './supabase.js';
 
 const SETTINGS_ID = '8f42b1c3-5d9e-4a7b-b2e1-9c3f4d5a6e7b';
 
@@ -115,4 +115,3 @@ export async function runYoutubeLiveCheck(force: boolean) {
     return { status: 500, data: { error: e?.message || 'YouTube API error', action: 'youtube_api_error' } };
   }
 }
-

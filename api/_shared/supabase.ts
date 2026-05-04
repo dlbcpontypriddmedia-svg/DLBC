@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { requiredEnv } from './env';
+import { requiredEnv } from './env.js';
 
 export function getServiceClient() {
   const url = requiredEnv('PROJECT_URL');

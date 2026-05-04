@@ -1,5 +1,5 @@
 import type { VercelRequest } from '@vercel/node';
-import { requiredEnv } from './env';
+import { requiredEnv } from './env.js';
 
 export async function proxyToSupabaseFunction(req: VercelRequest, fnName: string, body?: unknown) {
   const projectUrl = requiredEnv('PROJECT_URL').replace(/\/+$/, '');
@@ -28,4 +28,3 @@ export async function proxyToSupabaseFunction(req: VercelRequest, fnName: string
   const data = await res.json().catch(() => ({}));
   return { status: res.status, ok: res.ok, data };
 }
-

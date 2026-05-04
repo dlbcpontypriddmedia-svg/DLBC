@@ -1,10 +1,10 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { applyCors, handleOptions } from './_shared/cors';
-import { requiredEnv, optionalEnv } from './_shared/env';
-import { signJwt } from './_shared/jwt';
-import { setAuthCookie } from './_shared/session';
-import { getServiceClient } from './_shared/supabase';
-import { hashPassword, verifyPassword } from './_shared/password';
+import { applyCors, handleOptions } from './_shared/cors.js';
+import { requiredEnv, optionalEnv } from './_shared/env.js';
+import { signJwt } from './_shared/jwt.js';
+import { setAuthCookie } from './_shared/session.js';
+import { getServiceClient } from './_shared/supabase.js';
+import { hashPassword, verifyPassword } from './_shared/password.js';
 
 const SETTINGS_ID = '8f42b1c3-5d9e-4a7b-b2e1-9c3f4d5a6e7b';
 

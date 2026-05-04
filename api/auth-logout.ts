@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { applyCors, handleOptions } from './_shared/cors';
-import { clearAuthCookie } from './_shared/session';
+import { applyCors, handleOptions } from './_shared/cors.js';
+import { clearAuthCookie } from './_shared/session.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (handleOptions(req, res)) return;
@@ -8,4 +8,3 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Set-Cookie', clearAuthCookie());
   return res.status(200).json({ success: true });
 }
-

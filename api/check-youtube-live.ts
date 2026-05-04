@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { applyCors, handleOptions } from './_shared/cors';
-import { optionalEnv, requiredEnv } from './_shared/env';
-import { runYoutubeLiveCheck } from './_shared/youtube';
+import { applyCors, handleOptions } from './_shared/cors.js';
+import { optionalEnv, requiredEnv } from './_shared/env.js';
+import { runYoutubeLiveCheck } from './_shared/youtube.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (handleOptions(req, res)) return;
